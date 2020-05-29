@@ -10,12 +10,14 @@ const connect = (config: any, bridges: any) => {
 
   client.on('connect', () => {
 
+    console.log('Connected to mqtt');
+
     // subscribe to topic
-    client.subscribe(config.topic_prefix, (err) => {
-      if (err) {
-        console.log(`Cannot subscribe to topic ${config.topic_prefix}: ${err}`)
-      }
-    });
+    // client.subscribe(config.topic_prefix, (err) => {
+    //   if (err) {
+    //     console.log(`Cannot subscribe to topic ${config.topic_prefix}: ${err}`)
+    //   }
+    // });
 
     if (config.discovery) {
       const areaKeys = Object.keys(bridges.area);
@@ -34,7 +36,7 @@ const connect = (config: any, bridges: any) => {
             schema: "json",
             brightness: true
           }
-          client.publish(config.topic_prefix, JSON.stringify(payload), {
+          client.publish(topic, JSON.stringify(payload), {
             qos: config.qos,
             retain: config.retain
           });
@@ -43,10 +45,10 @@ const connect = (config: any, bridges: any) => {
     }
   });
 
-  client.on('message', (topic, message) => {
-    console.log(topic, message.toString());
-    client.end();
-  });
+  // client.on('message', (topic, message) => {
+  //   console.log(topic, message.toString());
+  //   client.end();
+  // });
 
   return client;
 };
