@@ -26,7 +26,7 @@ const connect = (config: any, bridges: any) => {
         channelKeys.map(channelKey => {
           const { type, name: channelName } = bridges.area[areaKey].channel[channelKey];
           const topic = `${config.topic_prefix}/${type}/${areaKey}/${channelKey}`;
-          const name = `${bridges.area[areaKey].name}/${channelName}`;
+          const name = `${bridges.area[areaKey].name} ${channelName}`;
           const payload = {
             "~": topic,
             name,
