@@ -3,3 +3,4 @@ A docker container to convert Philips Dynalite RS485 commands to MQTT. This cont
 
 ## Setup Steps
 1. Create a [MQTT server](https://hub.docker.com/_/eclipse-mosquitto)
+2. Run the app by running `docker-compose up --build`
