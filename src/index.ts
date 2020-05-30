@@ -9,7 +9,7 @@ import * as util from './utils';
 (async (): Promise<void> => {
   try {
     // Get and parse configuration
-    const config = YAML.parse(fs.readFileSync('./configuration.yml', 'utf8'));
+    const config = YAML.parse(fs.readFileSync('./config/configuration.yml', 'utf8'));
     const {
       mqtt: mqttConfig,
       dynalite: { bridges: [bridges] }
