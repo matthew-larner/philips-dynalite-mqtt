@@ -8,10 +8,6 @@ const connect = (host: string, port: number, onReceiveData: (data: Buffer) => vo
   });
 
   client.on('data', onReceiveData);
-  // client.on('data', (data) => {
-  //   console.log('Received: ' + data.byteLength as any, data.toString('hex', 11, 12), JSON.stringify(data))
-  //   // client.destroy(); // kill client after server's response
-  // });
 
   client.on('close', () => {
     console.log('Dynalite connection closed');

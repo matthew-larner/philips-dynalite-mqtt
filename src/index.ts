@@ -125,7 +125,7 @@ import * as util from './utils';
           const payload = payloadByType[type];
           const topic = `${mqttConfig.topic_prefix}/${area}/${channel}/state`;
 
-          console.log({ payload, topic });
+          console.log(`Sending payload: ${payload} to topic: ${topic}`);
 
           mqttClient.publish(topic, payload, {
             qos: mqttConfig.qos,
