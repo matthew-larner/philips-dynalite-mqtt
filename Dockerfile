@@ -22,5 +22,4 @@ RUN apk --no-cache --virtual build-dependencies add \
     && npm run build \
     && apk del build-dependencies
 
-EXPOSE 8080
 CMD [ "npm", "start" ]

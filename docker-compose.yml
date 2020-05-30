@@ -1,15 +1,12 @@
 version: "3.5"
 services:
   nodejs:
-    # image: 193962410929.dkr.ecr.ap-southeast-2.amazonaws.com/service-xxxx-development:latest
     build: .
     container_name: "philips-dynalite-mqtt"
     volumes:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
       - /usr/src/app/dist
-    ports:
-      - "8080:8080"
     networks:
       - app
 networks:

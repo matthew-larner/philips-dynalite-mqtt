@@ -1,7 +1,7 @@
 export const stringToDecimalBytes = (str: string) =>
   str.split('')
     .map((_, i) => str.charCodeAt(i))
-    .join(' ')
+    .join(' ');
 
 export const decimalToHex = (dec: number) => {
   let hex = dec.toString(16);
@@ -23,7 +23,7 @@ export const getChecksum = (str: string) => {
 
     const curr = strHex.indexOf(newStr.charAt(i));
     if (curr < 0) {
-      throw new Error("Non-hex character")
+      throw new Error("Non-hex character");
     }
     result += curr * fctr;
 
@@ -33,7 +33,5 @@ export const getChecksum = (str: string) => {
 
   // Calculate 2's complement
   result = (~(result & 0xff) + 1) & 0xFF;
-  const strResult = strHex.charAt(Math.floor(result / 16)) + strHex.charAt(result % 16);
-
-  console.log(strResult)
-}
+  return strHex.charAt(Math.floor(result / 16)) + strHex.charAt(result % 16);
+};
