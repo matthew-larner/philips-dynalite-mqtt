@@ -1,13 +1,11 @@
 import * as net from 'net';
 
-const connect = (host: string, port: number, onReceiveData: (data: Buffer) => void) => {
+const connect = (host: string, port: number) => {
   const client = new net.Socket();
 
   client.connect(port, host, () => {
     console.log('Connected to dynalite');
   });
-
-  client.on('data', onReceiveData);
 
   client.on('close', () => {
     console.log('Dynalite connection closed');
@@ -23,7 +21,19 @@ const connect = (host: string, port: number, onReceiveData: (data: Buffer) => vo
     console.log(`Dynalite error: ${err}`);
   });
 
-  return client;
+  const onMessage = (callback: (data: Buffer) => void) => {
+    client.on('data', callback);
+  };
+
+  const write = (data: Buffer, cb?: (error?: Error) => void) => {
+    console.log("TCP command to be sent:", data);
+    client.write(data, cb);
+  }
+
+  return {
+    onMessage,
+    write
+  };
 }
 
 export default connect;

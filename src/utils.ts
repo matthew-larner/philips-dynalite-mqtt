@@ -35,3 +35,9 @@ export const getChecksum = (str: string) => {
   result = (~(result & 0xff) + 1) & 0xFF;
   return strHex.charAt(Math.floor(result / 16)) + strHex.charAt(result % 16);
 };
+
+export const createBuffer = (buffer: number[]) => {
+  const checkSum = parseInt(getChecksum(buffer.map(item => decimalToHex(item)).join('')), 16);
+
+  return Buffer.from([...buffer, checkSum]);
+};

@@ -1,6 +1,6 @@
 import * as mqtt from 'mqtt';
 
-const connect = (config, onConnected, onMessage) => {
+const connect = (config, onConnected) => {
 
   const client = mqtt.connect(`mqtt://${config.broker}:${config.port}`);
 
@@ -18,9 +18,22 @@ const connect = (config, onConnected, onMessage) => {
     console.log('Mqtt connection closed');
   });
 
-  client.on('message', onMessage);
+  const onMessage = (callback: mqtt.OnMessageCallback) => {
+    client.on('message', callback);
+  };
 
-  return client;
+  const publish = (topic: string, payload: string) => {
+    console.log(`Sending payload: ${payload} to topic: ${topic}`);
+    client.publish(topic, payload, {
+      qos: config.qos,
+      retain: config.retain
+    });
+  };
+
+  return {
+    onMessage,
+    publish
+  };
 };
 
 export default connect;
