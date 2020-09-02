@@ -1,25 +1,25 @@
 import * as net from 'net';
 
-const connect = (host: string, port: number) => {
+const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
   const client = new net.Socket();
 
-  client.connect(port, host, () => {
+  client.on('connect', () => {
     console.log('Connected to dynalite');
   });
 
   client.on('close', () => {
     console.log('Dynalite connection closed');
 
-    client.setTimeout(5000, () => {
-      client.connect(port, host, () => {
-        console.log('Connected to dynalite');
-      });
-    });
+    setTimeout(() => {
+      client.connect(port, host);
+    }, reconnectSeconds * 1000);
   });
 
   client.on('error', (err) => {
-    console.log(`Dynalite error: ${err}`);
+    console.log(`Dynalite error: ${err.message}`);
   });
+
+  client.connect(port, host);
 
   const onMessage = (callback: (data: Buffer) => void) => {
     client.on('data', callback);

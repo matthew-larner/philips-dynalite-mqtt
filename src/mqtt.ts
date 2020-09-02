@@ -5,7 +5,7 @@ const connect = (config, onConnected) => {
   const client = mqtt.connect(`mqtt://${config.broker}:${config.port}`);
 
   client.on('error', (err) => {
-    console.log(`Mqtt error: ${err}`);
+    console.log(`Mqtt error: ${err.message}`);
   });
 
   client.on('connect', () => {

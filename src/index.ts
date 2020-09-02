@@ -89,7 +89,7 @@ try {
   };
 
   const mqttClient = mqtt(mqttConfig, onMqttConnected);
-  const dynaliteClient = dynalite(bridges.host, bridges.port);
+  const dynaliteClient = dynalite(bridges.host, bridges.port, bridges.reconnect_time);
 
   const handleHomeAssistantCommands = (topic: string, message: Buffer) => {
     try {
