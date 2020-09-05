@@ -46,6 +46,14 @@ try {
                 device_class: "motion",
                 state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/state`
               };
+            } else if (type === 'temperature') {
+              topic = `${mqttConfig.discovery_prefix}/sensor/a${areaKey}c${channelKey}/config`;
+              payload = {
+                name: `${bridges.area[areaKey].name} ${channelName}`,
+                device_class: "temperature",
+                state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/temp`,
+                unit_of_measurement: "°C"
+              };
             } else {
               // skip other types
               console.log('Skipping type:', type);
@@ -54,10 +62,7 @@ try {
 
             console.log(`Sending payload: ${JSON.stringify(payload)} to topic: ${topic}`);
 
-            client.publish(topic, JSON.stringify(payload), {
-              qos: mqttConfig.qos,
-              retain: mqttConfig.retain
-            });
+            client.publish(topic, JSON.stringify(payload));
           });
         });
       };
@@ -76,7 +81,7 @@ try {
               if (err) {
                 console.log(`Cannot subscribe to topic ${topic}: ${err}`);
               } else {
-                console.log('Subcribed to topic:', topic);
+                console.log('Subscribed to topic:', topic);
               }
             });
           }
@@ -134,13 +139,13 @@ try {
         return;
       }
 
-      const sendMqttMessage = (route: string) => (payload: string) => {
-        const topic = `${mqttConfig.topic_prefix}/a${area}c${channel}/${route}`;
+      const sendMqttMessage = (route: string, ch: number = channel) => (payload: string) => {
+        const topic = `${mqttConfig.topic_prefix}/a${area}c${ch}/${route}`;
 
         mqttClient.publish(topic, payload);
       };
       const sendMqttStateMessage = sendMqttMessage('state');
-      const sendMqttTemperatureMessage = sendMqttMessage('temp');
+      const sendMqttTemperatureMessage = sendMqttMessage('temp', 0); // use 0 for channel
 
       const processLightAndMotionMessage = (code: number) => {
         const { type } = bridges.area[area].channel[channel];
