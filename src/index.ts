@@ -132,20 +132,20 @@ try {
     if (firstDecimal === 172) {
       const thirdDecimal = data[2];
       const area = data[7];
-      const channel = data[11];
+      const channel = thirdDecimal === 87 ? 0 : data[11]; // use channel 0 for temperature
 
       if (!bridges.area[area] || !bridges.area[area].channel[channel]) {
         console.log(`Ignored message with area: ${area} channel: ${channel}`);
         return;
       }
 
-      const sendMqttMessage = (route: string, ch: number = channel) => (payload: string) => {
-        const topic = `${mqttConfig.topic_prefix}/a${area}c${ch}/${route}`;
+      const sendMqttMessage = (route: string) => (payload: string) => {
+        const topic = `${mqttConfig.topic_prefix}/a${area}c${channel}/${route}`;
 
         mqttClient.publish(topic, payload);
       };
       const sendMqttStateMessage = sendMqttMessage('state');
-      const sendMqttTemperatureMessage = sendMqttMessage('temp', 0); // use 0 for channel
+      const sendMqttTemperatureMessage = sendMqttMessage('temp');
 
       const processLightAndMotionMessage = (code: number) => {
         const { type } = bridges.area[area].channel[channel];
