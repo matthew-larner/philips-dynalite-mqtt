@@ -134,11 +134,13 @@ try {
         return;
       }
 
-      const sendMqttMessage = (payload: string) => {
-        const topic = `${mqttConfig.topic_prefix}/a${area}c${channel}/state`;
+      const sendMqttMessage = (route: string) => (payload: string) => {
+        const topic = `${mqttConfig.topic_prefix}/a${area}c${channel}/${route}`;
 
         mqttClient.publish(topic, payload);
       };
+      const sendMqttStateMessage = sendMqttMessage('state');
+      const sendMqttTemperatureMessage = sendMqttMessage('temp');
 
       const processLightAndMotionMessage = (code: number) => {
         const { type } = bridges.area[area].channel[channel];
@@ -148,9 +150,9 @@ try {
         });
 
         if (code === 1) {
-          sendMqttMessage(createPayloadByType('ON')[type]);
+          sendMqttStateMessage(createPayloadByType('ON')[type]);
         } else if (code === 4) {
-          sendMqttMessage(createPayloadByType('OFF')[type]);
+          sendMqttStateMessage(createPayloadByType('OFF')[type]);
         } else if (code === 0) {
           const buffer = util.createBuffer([28, area, channel - 1, 97, 0, 0, 255]);
 
@@ -169,13 +171,18 @@ try {
           payload = { state: "ON", brightness };
         }
 
-        sendMqttMessage(JSON.stringify(payload));
+        sendMqttStateMessage(JSON.stringify(payload));
       };
+      const processTemperature = (x: number, y: number) => {
+        sendMqttTemperatureMessage(`${x}.${y}`);
+      }
 
       if (thirdDecimal === 17) {
         processLightAndMotionMessage(data[13]);
       } else if (thirdDecimal === 35) {
         processChannelFeedbackMessage(data[14]);
+      } else if (thirdDecimal === 87) {
+        processTemperature(data[10], data[11]);
       } else {
         console.log('Ignored message 3rd character decimal:', thirdDecimal);
       }
