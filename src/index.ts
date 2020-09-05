@@ -179,7 +179,8 @@ try {
         sendMqttStateMessage(JSON.stringify(payload));
       };
       const processTemperature = (x: number, y: number) => {
-        sendMqttTemperatureMessage(`${x}.${y}`);
+        const temp = (Math.round(parseFloat(`${x}.${y}`) * 10) / 10).toString();
+        sendMqttTemperatureMessage(temp);
       }
 
       if (thirdDecimal === 17) {
