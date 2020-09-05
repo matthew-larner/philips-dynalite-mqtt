@@ -99,8 +99,8 @@ try {
       const [area, channel] = topic.split('/')[1].match(/\d+/g);
       const fade = bridges.area[area].channel[channel].fade * 10;
 
-      const limitBrightness = (val: number) => val === 255 ? 254 : val;
-      const channelLevel = !isNaN(brightness) ? 254 - limitBrightness(brightness) : state === "ON" ? 0 : 254;
+      const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
+      const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
 
       const buffer = util.createBuffer([28, parseInt(area), parseInt(channel) - 1, 113, channelLevel, fade, 255]);
 
