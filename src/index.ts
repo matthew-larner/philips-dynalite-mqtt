@@ -98,7 +98,7 @@ try {
       const { brightness, state } = JSON.parse(message.toString());
       const [area, channel] = topic.split('/')[1].match(/\d+/g);
       const fade = bridges.area[area].channel[channel].fade * 10;
-      const channelLevel = !isNaN(brightness) ? 255 - brightness : state === "ON" ? 0 : 255;
+      const channelLevel = !isNaN(brightness) ? 254 - brightness : state === "ON" ? 0 : 254;
       const buffer = util.createBuffer([28, parseInt(area), parseInt(channel) - 1, 113, channelLevel, fade, 255]);
 
       const sendMqttMessage = (err: Error) => {
