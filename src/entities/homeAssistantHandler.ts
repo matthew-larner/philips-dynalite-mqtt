@@ -99,7 +99,7 @@ export const commandsHandler = ({
       const [area, channel] = topic.split('/')[1].match(/\d+/g);
       const areaNumber = parseInt(area);
       const channelNumber = parseInt(channel);
-
+      const type = bridges.area[area].channel[channel].type;
 
       const sendMqttMessage = (data: object) => (err: Error) => {
         if (!err) {
@@ -137,16 +137,16 @@ export const commandsHandler = ({
         dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ hvac_setpoint: hvacSetpoint }));
       };
 
-      if (topic === 'light') {
+      if (type === 'light') {
         processLight();
-      } else if (topic === 'channel_level') {
+      } else if (type === 'channel_level') {
         processChannelLevel();
-      } else if (topic === 'hvac_setpoint') {
+      } else if (type === 'hvac_setpoint') {
         processHvacSetpoint();
       } else {
-        // this should not be reached unless subscribed to an unintended topic
+        // this should not be reached unless subscribed to an unintended type
 
-        console.log(`Home assistant ignoring unsupported topic: ${topic}`);
+        console.log(`Home assistant ignoring unsupported type: ${type}`);
       }
     } catch (error) {
       console.error('Home assistant commandHandler error:', error);
