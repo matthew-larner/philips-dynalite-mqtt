@@ -130,9 +130,8 @@ export const commandsHandler = ({
       };
       const processHvacSetpoint = () => {
         const { hvac_setpoint: hvacSetpoint } = JSON.parse(message.toString());
-        const temperature = Math.round(hvacSetpoint / 4);
 
-        const buffer = util.createBuffer([172, 3, 86, 220, 0, 80, 0, areaNumber, 255, 13, temperature, channelNumber, 0, 0, 53]);
+        const buffer = util.createBuffer([172, 3, 86, 220, 0, 80, 0, areaNumber, 255, 13, hvacSetpoint, channelNumber, 0, 0, 53]);
 
         dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ hvac_setpoint: hvacSetpoint }));
       };
