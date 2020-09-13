@@ -74,7 +74,7 @@ try {
       areaKeys.forEach(areaKey => {
         const channelKeys = Object.keys(bridges.area[areaKey].channel);
         channelKeys.forEach(channelKey => {
-          if (bridges.area[areaKey].channel[channelKey].type === 'light') {
+          if (['light', 'channel_level'].includes(bridges.area[areaKey].channel[channelKey].type)) {
             const topic = `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/set`;
 
             client.subscribe(topic, (err) => {
@@ -100,25 +100,43 @@ try {
     try {
       console.log("Topic:", topic, "Received message: ", message.toString().replace(/\s/g, ''));
 
-      const { brightness, state } = JSON.parse(message.toString());
       const [area, channel] = topic.split('/')[1].match(/\d+/g);
-      const fade = bridges.area[area].channel[channel].fade * 10;
 
-      const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
-      const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
-
-      const buffer = util.createBuffer([28, parseInt(area), parseInt(channel) - 1, 113, channelLevel, fade, 255]);
-
-      const sendMqttMessage = (err: Error) => {
+      const sendMqttMessage = (data: object) => (err: Error) => {
         if (!err) {
           const mqttTopic = topic.replace('set', 'state');
-          const payload = JSON.stringify({ state, brightness });
+          const payload = JSON.stringify(data);
 
           mqttClient.publish(mqttTopic, payload);
         }
       };
 
-      dynaliteClient.write(Buffer.from(buffer), sendMqttMessage);
+      const processLight = () => {
+        const { brightness, state } = JSON.parse(message.toString());
+        const fade = bridges.area[area].channel[channel].fade * 10;
+
+        const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
+        const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
+
+        const buffer = util.createBuffer([28, parseInt(area), parseInt(channel) - 1, 113, channelLevel, fade, 255]);
+
+        dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+      };
+      const processChannelLevel = () => {
+        const channelLevel = parseInt(message.toString());
+
+        const buffer = util.createBuffer([28, parseInt(area), parseInt(channel) - 1, 113, channelLevel, 0, 255]);
+
+        dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ channel_level: channelLevel }));
+      };
+
+      if (topic === 'light') {
+        processLight();
+      } else if (topic === 'channel_level') {
+        processChannelLevel();
+      } else {
+        console.log(`Ignoring unsupported topic: ${topic}`);
+      }
     } catch (error) {
       console.error("handleHomeAssistantCommands error:", error);
     }
@@ -182,6 +200,9 @@ try {
         const temp = (Math.round(parseFloat(`${x}.${y}`) * 10) / 10).toString();
         sendMqttTemperatureMessage(temp);
       }
+      const processHvac = (data: string) => {
+        sendMqttStateMessage(data);
+      };
 
       if (thirdDecimal === 17) {
         processLightAndMotionMessage(data[13]);
@@ -189,6 +210,8 @@ try {
         processChannelFeedbackMessage(data[14]);
       } else if (thirdDecimal === 87) {
         processTemperature(data[10], data[11]);
+      } else if (thirdDecimal === 86) {
+        processHvac(data[10].toString());
       } else {
         console.log('Ignored message 3rd character decimal:', thirdDecimal);
       }
