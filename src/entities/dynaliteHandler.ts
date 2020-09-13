@@ -70,6 +70,9 @@ export const commandsHandler = ({
       const processHvac = (data: string) => {
         sendMqttStateMessage(data);
       };
+      const processChannelLevel = (data: string) => {
+        sendMqttStateMessage(data);
+      };
 
       if (thirdDecimal === 17) {
         processLightAndMotionMessage(data[13]);
@@ -79,6 +82,8 @@ export const commandsHandler = ({
         processTemperature(data[10], data[11]);
       } else if (thirdDecimal === 86) {
         processHvac(data[10].toString());
+      } else if (thirdDecimal === 16) {
+        processChannelLevel(data[12].toString());
       } else {
         console.log('Dynalite ignored message 3rd character decimal:', thirdDecimal);
       }

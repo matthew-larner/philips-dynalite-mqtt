@@ -123,15 +123,22 @@ export const commandsHandler = ({
       };
       const processChannelLevel = () => {
         const { channel_level: channelLevel } = JSON.parse(message.toString());
+        let level = 255 - channelLevel;
 
-        const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, 0, 255]);
+        // level should be 1 - 255
+        if (level === 0) {
+          level = 1;
+        }
+
+        const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, level, 0, 255]);
 
         dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ channel_level: channelLevel }));
       };
       const processHvacSetpoint = () => {
         const { hvac_setpoint: hvacSetpoint } = JSON.parse(message.toString());
+        const temperature = hvacSetpoint * 4;
 
-        const buffer = util.createBuffer([172, 3, 86, 220, 0, 80, 0, areaNumber, 255, 13, hvacSetpoint, channelNumber, 0, 0, 53]);
+        const buffer = util.createBuffer([28, areaNumber, 7, 74, 0, temperature, 255]);
 
         dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ hvac_setpoint: hvacSetpoint }));
       };
