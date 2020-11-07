@@ -18,7 +18,7 @@ services:
     volumes:
       - ./config:/usr/src/app/config
     environment:
-      - TZ=Australia/Perth
+      - TZ=Australia/Sydney
     restart: always
 ```
 
