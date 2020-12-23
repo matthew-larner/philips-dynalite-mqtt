@@ -16,7 +16,7 @@
   "dependencies": {
     "@types/node": "^13.9.1",
     "if-env": "^1.0.4",
-    "mqtt": "^4.1.0",
+    "mqtt": "^4.2.6",
     "typescript": "^3.8.3",
     "yaml": "^1.10.0"
   },
