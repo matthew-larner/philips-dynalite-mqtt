@@ -56,7 +56,10 @@ export const startup = ({
 
             console.log(`Sending payload: ${JSON.stringify(payload)} to topic: ${topic}`);
 
-            client.publish(topic, JSON.stringify(payload));
+            client.publish(topic, JSON.stringify(payload), {
+              qos: mqttConfig.qos,
+              retain: mqttConfig.retain
+            });
           });
         });
       };
