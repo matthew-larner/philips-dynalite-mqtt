@@ -5,6 +5,8 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
 
   client.on('connect', () => {
     console.log('Connected to dynalite');
+
+    client.setKeepAlive(true);
   });
 
   client.on('close', () => {
@@ -28,7 +30,7 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
   const write = (data: Buffer, cb?: (error?: Error) => void) => {
     console.log("TCP command to be sent:", data);
     client.write(data, cb);
-  }
+  };
 
   return {
     onMessage,
