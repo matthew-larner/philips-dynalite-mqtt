@@ -6,7 +6,8 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
   client.on('connect', () => {
     console.log('Connected to dynalite');
 
-    client.setKeepAlive(true);
+    // client.setKeepAlive(true);
+    // client.setTimeout(5000);
   });
 
   client.on('close', () => {
@@ -21,6 +22,12 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
     console.log(`Dynalite error: ${err.message}`);
   });
 
+  // client.on('timeout', () => {
+  //   console.log(`Dynalite timeout: ${client.connecting}`);
+  //   // client.setTimeout(5000);
+  //   client.end();
+  // });
+
   client.connect(port, host);
 
   const onMessage = (callback: (data: Buffer) => void) => {
@@ -29,7 +36,12 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
 
   const write = (data: Buffer, cb?: (error?: Error) => void) => {
     console.log("TCP command to be sent:", data);
-    client.write(data, cb);
+    client.write(data, (err) => {
+      if (err) {
+        console.log(`Sending message to dynalite failed: ${err.message}`);
+      }
+      cb();
+    });
   };
 
   return {
