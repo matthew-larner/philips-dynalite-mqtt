@@ -15,7 +15,7 @@ try {
   } = config;
 
   const mqttClient = mqtt(mqttConfig, homeAssistantHandler.startup({ mqttConfig, bridges }));
-  const dynaliteClient = dynalite(bridges.host, bridges.port, bridges.reconnect_time);
+  const dynaliteClient = dynalite(bridges.host, bridges.port, bridges.reconnect_time, bridges.auto_reconnect_time);
 
   mqttClient.onMessage(homeAssistantHandler.commandsHandler({ mqttClient, dynaliteClient, bridges }));
   dynaliteClient.onMessage(dynaliteHander.commandsHandler({ mqttClient, dynaliteClient, bridges, mqttConfig }));

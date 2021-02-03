@@ -1,17 +1,24 @@
 import * as net from 'net';
 
-const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
+const connect = (host: string, port: number, reconnectSeconds: number = 15, idleSeconds: number = 60) => {
   const client = new net.Socket();
+  let timedOut = false;
 
   client.on('connect', () => {
     console.log('Connected to dynalite');
 
-    // client.setKeepAlive(true);
-    // client.setTimeout(5000);
+    client.setTimeout(idleSeconds * 1000);
   });
 
   client.on('close', () => {
     console.log('Dynalite connection closed');
+
+    if (timedOut) {
+      client.connect(port, host);
+      timedOut = false;
+
+      return;
+    }
 
     setTimeout(() => {
       client.connect(port, host);
@@ -22,11 +29,11 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15) => {
     console.log(`Dynalite error: ${err.message}`);
   });
 
-  // client.on('timeout', () => {
-  //   console.log(`Dynalite timeout: ${client.connecting}`);
-  //   // client.setTimeout(5000);
-  //   client.end();
-  // });
+  client.on('timeout', () => {
+    console.log(`Dynalite connection to be closed due to idleness`);
+    timedOut = true;
+    client.end();
+  });
 
   client.connect(port, host);
 
