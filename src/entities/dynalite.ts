@@ -30,7 +30,7 @@ const connect = (host: string, port: number, reconnectSeconds: number = 15, idle
   });
 
   client.on('timeout', () => {
-    console.log(`Dynalite connection to be closed due to idleness`);
+    console.log(`No TCP communication detected in the last ${idleSeconds} seconds. Force reconnecting...`);
     timedOut = true;
     client.end();
   });
