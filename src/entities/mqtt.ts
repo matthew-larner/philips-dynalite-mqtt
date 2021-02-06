@@ -2,7 +2,7 @@ import * as mqtt from 'mqtt';
 
 const connect = (config: any, onConnected: (client: mqtt.MqttClient) => void) => {
 
-  const client = mqtt.connect(`mqtt://${config.broker}:${config.port}`);
+  const client = mqtt.connect(`mqtt://${config.username}:${config.password}@${config.broker}:${config.port}`);
 
   client.on('error', (err) => {
     console.log(`Mqtt error: ${err.message}`);

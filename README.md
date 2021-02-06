@@ -28,6 +28,8 @@ services:
 mqtt:
   broker: 192.168.1.102
   port: 1883
+  username: xxxx
+  password: xxxx
   qos: 2
   retain: true
   discovery: true
