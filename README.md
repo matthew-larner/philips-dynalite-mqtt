@@ -103,6 +103,6 @@ dynalite:
 ```
 
 **Where:**
-- `type` is either: `temperature` (antumbra temperature reading), `light` (a light), `channel_level` (a channel level)
+- `type` is either: `light` (a light), `motion` (a motion sensor), `temperature` (antumbra temperature reading), `channel_level` (a channel level)
 - `brghtness`: Allow brightness adjustment. `true` or `false`. Can be used with type=light only
 - `fade`: fade time in seconds. Can be used with type=light only
