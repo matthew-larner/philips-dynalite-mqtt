@@ -19,6 +19,7 @@ services:
     image: matthewlarner/philips-dynalite-mqtt:latest
     volumes:
       - ./config:/usr/src/app/config
+      - ./data:/usr/src/app/data
     environment:
       - TZ=Australia/Sydney
     restart: always
