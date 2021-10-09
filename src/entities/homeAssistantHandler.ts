@@ -30,22 +30,27 @@ export const startup = ({
                 unique_id: name.toLowerCase().replace(/ /g, "_"),
                 cmd_t: "~/set",
                 stat_t: "~/state",
+                availability_topic: `${mqttConfig.topic_prefix}/available`,
                 schema: "json",
                 brightness: true
               };
             } else if (type === 'motion') {
               topic = `${mqttConfig.discovery_prefix}/binary_sensor/a${areaKey}c${channelKey}/config`;
               payload = {
-                name: `${bridges.area[areaKey].name} ${channelName}`,
+                name,
+                unique_id: name.toLowerCase().replace(/ /g, "_"),
                 device_class: "motion",
-                state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/state`
+                state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/state`,
+                availability_topic: `${mqttConfig.topic_prefix}/available`
               };
             } else if (type === 'temperature') {
               topic = `${mqttConfig.discovery_prefix}/sensor/a${areaKey}c${channelKey}/config`;
               payload = {
-                name: `${bridges.area[areaKey].name} ${channelName}`,
+                name,
+                unique_id: name.toLowerCase().replace(/ /g, "_"),
                 device_class: "temperature",
                 state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/temp`,
+                availability_topic: `${mqttConfig.topic_prefix}/available`,
                 unit_of_measurement: "°C"
               };
             } else {

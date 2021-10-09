@@ -1,5 +1,7 @@
 # Philips Dynalite MQTT
-A docker container to convert Philips Dynalite RS485 commands to MQTT. This container can be run in docker and connects to MQTT to communicate with Home Assistant. This project has no affiliation with Philips/Dynalite or Home Assistant. This is currently in beta. Use at your own risk.
+A docker container to convert Philips Dynalite RS485 commands to MQTT. 
+Supports lights, motion sensors and temperature readings from Antumbra switches/displays.
+This container can be run in docker and connects to MQTT to communicate with Home Assistant. This project has no affiliation with Philips/Dynalite or Home Assistant. This is currently in beta. Use at your own risk.
 
 ## Setup Steps
 1. Create a [MQTT server](https://hub.docker.com/_/eclipse-mosquitto)
@@ -35,6 +37,7 @@ mqtt:
   discovery: true
   discovery_prefix: homeassistant
   topic_prefix: dynalite
+  availability_topic: dynalite/available
 
 # Dynalite area config
 dynalite:
@@ -43,7 +46,7 @@ dynalite:
       port: 50000
       area:
         '1':
-          name: Master Bedroom
+          name: Bedroom 1
           channel:       
             '0':
               name: Temperature
@@ -51,17 +54,17 @@ dynalite:
             '1':
               name: Ensuite
               type: light
-              brightness: true
+			        mode: onoff
               fade: 0.0
             '2':
               name: Bedhead
               type: light
-              brightness: true
+              mode: dimmer
               fade: 2.0
             '3':
               name: Downlights
               type: light
-              brightness: true
+              mode: dimmer
               fade: 2.0
             '4':
               name: Motion
@@ -72,13 +75,46 @@ dynalite:
             '1':
               name: Downlights
               type: light
-              brightness: true
-              fade: 2.0
+              mode: onoff
+              fade: 0.0
             '2':
               name: Dining Table
               type: light
-              brightness: true
+              mode: dimmer
               fade: 2.0
+        '3':
+          name: Kitchen
+          channel:
+            '1':
+              name: Cupboard Strip Light
+              type: light
+              mode: rgbw
+			        channel: red
+              fade: 0.0
+            '2':
+              name: Cupboard Strip Light
+              type: light
+              mode: rgbw
+			        channel: green
+              fade: 0.0
+			      '3':
+              name: Cupboard Strip Light
+              type: light
+              mode: rgbw
+			        channel: blue
+              fade: 0.0
+			      '4':
+              name: Cupboard Strip Light
+              type: light
+              mode: rgbw
+			        channel: white
+              fade: 0.0
+			      '5':
+              name: Cupboard Strip Light
+              type: light
+              mode: rgbw
+			        channel: onoff
+              fade: 0.0
         '101':
           name: Aircon 1
           channel:
@@ -104,5 +140,5 @@ dynalite:
 
 **Where:**
 - `type` is either: `light` (a light), `motion` (a motion sensor), `temperature` (antumbra temperature reading), `channel_level` (a channel level)
-- `brghtness`: Allow brightness adjustment. `true` or `false`. Can be used with type=light only
+- `mode` is either: `onoff` (a light that allows on/off control only), `dimmer` (a light that supports adjustable brightness), `rgbw` (a RGBW light). Can be used with type=light only
 - `fade`: fade time in seconds. Can be used with type=light only
