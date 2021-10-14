@@ -110,7 +110,7 @@ dynalite:
               mode: rgbw
               channel: white
               fade: 0.0
-			      '5':
+            '5':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
