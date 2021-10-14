@@ -55,7 +55,7 @@ dynalite:
             '1':
               name: Ensuite
               type: light
-			        mode: onoff
+              mode: onoff
               fade: 0.0
             '2':
               name: Bedhead
@@ -90,31 +90,31 @@ dynalite:
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-			        channel: red
+              channel: red
               fade: 0.0
             '2':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-			        channel: green
+	      channel: green
               fade: 0.0
-			      '3':
+            '3':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-			        channel: blue
+              channel: blue
               fade: 0.0
-			      '4':
+            '4':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-			        channel: white
+              channel: white
               fade: 0.0
 			      '5':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-			        channel: onoff
+              channel: onoff
               fade: 0.0
         '101':
           name: Aircon 1
