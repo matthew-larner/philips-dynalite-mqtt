@@ -41,3 +41,9 @@ export const createBuffer = (buffer: number[]) => {
 
   return Buffer.from([...buffer, checkSum]);
 };
+
+export const getUninqueName = (areaName, channelName) => {
+  let name = areaName + " " + channelName;
+
+  return name.split(" ").map(t => t.toLowerCase()).join("_")
+};

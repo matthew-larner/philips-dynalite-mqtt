@@ -160,3 +160,7 @@ $RECYCLE.BIN/
 
 # Settings YAML
 configuration.yml
+
+data/*
+
+config/configuration.yml
