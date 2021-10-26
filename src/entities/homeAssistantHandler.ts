@@ -23,17 +23,35 @@ export const startup = ({
             let topic: string;
 
             if (type === 'light') {
+              let mode = bridges.area[areaKey].channel[channelKey].mode; 
               topic = `${mqttConfig.discovery_prefix}/${type}/a${areaKey}c${channelKey}/config`;
-              payload = {
-                "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
-                name,
-                unique_id: name.toLowerCase().replace(/ /g, "_"),
-                cmd_t: "~/set",
-                stat_t: "~/state",
-                availability_topic: `${mqttConfig.topic_prefix}/available`,
-                schema: "json",
-                brightness: true
-              };
+              if (mode == "dimmer" || mode == "onoff") {
+                payload = {
+                  "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
+                  name,
+                  unique_id: name.toLowerCase().replace(/ /g, "_"),
+                  cmd_t: "~/set",
+                  stat_t: "~/state",
+                  availability_topic: `${mqttConfig.topic_prefix}/available`,
+                  schema: "json",
+                  brightness: true
+                };
+              } else if (mode == "rgbw") {
+                let name = `${bridges.area[areaKey].name} ${bridges.area[areaKey].channel[channelKey].name}`;
+                let unique_id = name.toLowerCase().replace(/ /g, "_");
+                payload = {
+                  name: name,
+                  unique_id: unique_id,
+                  command_topic: `rgbw2mqtt/${unique_id}/set`,
+                  state_topic: `rgbw2mqtt/${unique_id}`,
+                  availability_topic: `${mqttConfig.topic_prefix}/available`,
+                  schema: "json",
+                  brightness: true,
+                  color_mode: true,
+                  supported_color_modes: ["rgbw"]
+                };
+              } 
+              
             } else if (type === 'motion') {
               topic = `${mqttConfig.discovery_prefix}/binary_sensor/a${areaKey}c${channelKey}/config`;
               payload = {
