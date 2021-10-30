@@ -14,5 +14,6 @@ export interface Handler {
   mqttClient: MqttClient,
   dynaliteClient: DynaliteClient,
   bridges?: any,
-  mqttConfig?: any
+  mqttConfig?: any,
+  db?: any
 };

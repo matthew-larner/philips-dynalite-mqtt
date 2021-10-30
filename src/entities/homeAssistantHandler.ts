@@ -116,13 +116,16 @@ export const startup = ({
 export const commandsHandler = ({
   mqttClient,
   dynaliteClient,
-  bridges
+  bridges,
+  mqttConfig,
+  db
 }: Handler) =>
   (topic: string, message: Buffer) => {
     try {
       console.log("Topic:", topic, "Received message: ", message.toString().replace(/\s/g, ''));
 
       const [area, channel] = topic.split('/')[1].match(/\d+/g);
+      const unique_id = bridges.area[area].channel[channel].name.toLowerCase().replace(/ /g, "_");
       const areaNumber = parseInt(area);
       const channelNumber = parseInt(channel);
       const type = bridges.area[area].channel[channel].type;
@@ -137,15 +140,48 @@ export const commandsHandler = ({
       };
 
       const processLight = () => {
+        let mode = bridges.area[area].channel[channel].mode;
         const { brightness, state } = JSON.parse(message.toString());
+        const payload = JSON.parse(message.toString());
+        
         const fade = bridges.area[area].channel[channel].fade * 10;
 
         const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
         const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
 
-        const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+        
+        if (mode == "onoff" || mode == "dimmer") {
+          const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+          dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+        } else if (mode == "rgbw") {
+          if (state == "ON") {
+            let statement = "UPDATE lights SET state = 1";
+            if (payload.red) {
+              statement += `, red = ${payload.red}`
+            }
+            if (payload.blue) {
+              statement += `, blue = ${payload.blue}`
+            }
+            if (payload.green) {
+              statement += `, green = ${payload.green}`
+            }
+            if (payload.white) {
+              statement += `, white = ${payload.white}`
+            }
+            if (payload.brightness) {
+              statement += `, brightness = ${payload.brightness}`
+            }
+            db.run(statement);
 
-        dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+            
+          } else if (state == "OFF") {
+            // TODO: write to DB
+            db.run(`UPDATE lights SET state = 0 WHERE unique_id = ${unique_id}`);
+
+            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, 0, 255]);
+            dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+          }
+        }
       };
       const processChannelLevel = () => {
         const { channel_level: channelLevel } = JSON.parse(message.toString());

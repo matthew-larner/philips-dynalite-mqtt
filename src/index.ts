@@ -22,14 +22,13 @@ try {
     db.run("CREATE TABLE IF NOT EXISTS lights (unique_id TEXT, name TEXT, state INTEGER, red TEXT, green TEXT, blue TEXT, white TEXT, brightness TEXT)");
   });
 
-  db.close();
-
+  
   const mqttClient = mqtt(mqttConfig, homeAssistantHandler.startup({ mqttConfig, bridges }));
   const dynaliteClient = dynalite(bridges.host, bridges.port, bridges.reconnect_time, bridges.auto_reconnect_time);
-
-  mqttClient.onMessage(homeAssistantHandler.commandsHandler({ mqttClient, dynaliteClient, bridges }));
+  
+  mqttClient.onMessage(homeAssistantHandler.commandsHandler({ mqttClient, dynaliteClient, bridges, mqttConfig, db}));
   dynaliteClient.onMessage(dynaliteHander.commandsHandler({ mqttClient, dynaliteClient, bridges, mqttConfig }));
-
+  
 } catch (error) {
   console.error(error.message);
   process.exit(1);
