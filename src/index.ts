@@ -5,6 +5,7 @@ import mqtt from './entities/mqtt';
 import dynalite from './entities/dynalite';
 import * as homeAssistantHandler from './entities/homeAssistantHandler';
 import * as dynaliteHander from './entities/dynaliteHandler';
+import * as dbmanager from './entities/dbmanager';
 
 try {
   // Get and parse configuration
@@ -13,7 +14,7 @@ try {
     mqtt: mqttConfig,
     dynalite: { bridges: [bridges] }
   } = config;
-
+  dbmanager.dbinit();
   const mqttClient = mqtt(mqttConfig, homeAssistantHandler.startup({ mqttConfig, bridges }));
   const dynaliteClient = dynalite(bridges.host, bridges.port, bridges.reconnect_time, bridges.auto_reconnect_time);
 

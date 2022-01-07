@@ -10,5 +10,8 @@ services:
       - /usr/src/app/config
     networks:
       - app
+  bash:
+    build: .
+    entrypoint: /bin/sh
 networks:
   app:
