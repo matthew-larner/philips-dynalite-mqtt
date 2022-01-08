@@ -14,7 +14,7 @@ try {
     mqtt: mqttConfig,
     dynalite: { bridges: [bridges] }
   } = config;
-  dbmanager.dbinit();
+  dbmanager.dbinit(bridges);
   const mqttClient = mqtt(mqttConfig, homeAssistantHandler.startup({ mqttConfig, bridges }));
   const dynaliteClient = dynalite(bridges.host, bridges.port, bridges.reconnect_time, bridges.auto_reconnect_time);
 
