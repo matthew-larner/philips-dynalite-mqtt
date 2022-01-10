@@ -23,5 +23,7 @@ try {
 
 } catch (error) {
   console.error(error.message);
+  console.log('closing !!!');
+  dbmanager.dbclose();
   process.exit(1);
 }

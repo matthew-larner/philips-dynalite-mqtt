@@ -13,10 +13,14 @@ export const startup = ({
       if (mqttConfig.discovery) {
         // publish every channels of dynalite.bridges[0].area keys
         const areaKeys = Object.keys(bridges.area);
+        let sendonce: number;//used to prevent sending publish for rgbw of same channel
+        let publish_topic:boolean;
         areaKeys.forEach(areaKey => {
+          sendonce = 0;
+          publish_topic=true;
           const channelKeys = Object.keys(bridges.area[areaKey].channel);
           channelKeys.forEach(channelKey => {
-            const { type, name: channelName } = bridges.area[areaKey].channel[channelKey];
+            const { type, name: channelName, mode: lightmode } = bridges.area[areaKey].channel[channelKey];
             const name = `${bridges.area[areaKey].name} ${channelName}`;
 
             let payload: object;
@@ -24,15 +28,35 @@ export const startup = ({
 
             if (type === 'light') {
               topic = `${mqttConfig.discovery_prefix}/${type}/a${areaKey}c${channelKey}/config`;
-              payload = {
-                "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
-                name,
-                unique_id: name.toLowerCase().replace(/ /g, "_"),
-                cmd_t: "~/set",
-                stat_t: "~/state",
-                schema: "json",
-                brightness: true
-              };
+              if (lightmode === 'rgbw') {
+                var uniqueid = name.toLowerCase().replace(/ /g, "_");
+                payload = {
+                  name: name,
+                  unique_id: uniqueid,
+                  state_topic: `${mqttConfig.topic_prefix}/${uniqueid}`,
+                  command_topic: `${mqttConfig.topic_prefix}/${uniqueid}/set`,
+                  schema: "json",
+                  availablity_topic: mqttConfig.availability_topic,
+                  brightness: true,
+                  color_mode: true,
+                  support_color_modes: ["rgbw"]
+                };
+                if(sendonce>=1){
+                  publish_topic=false;
+                }
+                sendonce ++;
+              } else {
+                payload = {
+                  "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
+                  name,
+                  unique_id: name.toLowerCase().replace(/ /g, "_"),
+                  cmd_t: "~/set",
+                  stat_t: "~/state",
+                  schema: "json",
+                  brightness: true
+                };
+              }
+
             } else if (type === 'motion') {
               topic = `${mqttConfig.discovery_prefix}/binary_sensor/a${areaKey}c${channelKey}/config`;
               payload = {
@@ -54,12 +78,14 @@ export const startup = ({
               return;
             }
 
-            console.log(`Sending payload: ${JSON.stringify(payload)} to topic: ${topic}`);
+            if (publish_topic) {
+              console.log(`Sending payload: ${JSON.stringify(payload)} to topic: ${topic} `);
+              client.publish(topic, JSON.stringify(payload), {
+                qos: mqttConfig.qos,
+                retain: mqttConfig.retain
+              });
+            }
 
-            client.publish(topic, JSON.stringify(payload), {
-              qos: mqttConfig.qos,
-              retain: mqttConfig.retain
-            });
           });
         });
       };

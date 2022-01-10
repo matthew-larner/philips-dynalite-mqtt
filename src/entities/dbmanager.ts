@@ -43,7 +43,7 @@ export const dbinit = (bridges: any) => {
                         console.error(err);
                     } else {
                         if (row) {
-                            console.log('row found id: '+row.id + ": " + row.state, row.red, row.green, row.blue);
+                            console.log('row found id: ' + row.id + ": " + row.state, row.red, row.green, row.blue);
                         }
                         else {
                             //do nothing
@@ -56,7 +56,15 @@ export const dbinit = (bridges: any) => {
         }
     }
 
-    db.close();
+};
+
+export const dbclose = () => {
+    if (db) {
+        db.close();
+        return true;
+    }
+    console.warn("db is not initialized")
+    return false;
 };
 
 export const dbinsert = (area: number, channel: number, state: number, red: number, green: number, blue: number, white: number, brigthness: number) => {
@@ -67,6 +75,6 @@ export const dbinsert = (area: number, channel: number, state: number, red: numb
         stmt.finalize();
         return true;
     }
-    console.log("db is not initialized")
+    console.warn("db is not initialized")
     return false;
 };
