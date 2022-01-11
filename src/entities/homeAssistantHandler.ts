@@ -4,6 +4,8 @@ import { Handler } from '../contracts';
 
 import * as util from './utils';
 
+import * as dbmanager from './dbmanager';
+
 export const startup = ({
   mqttConfig,
   bridges
@@ -14,10 +16,10 @@ export const startup = ({
         // publish every channels of dynalite.bridges[0].area keys
         const areaKeys = Object.keys(bridges.area);
         let sendonce: number;//used to prevent sending publish for rgbw of same channel
-        let publish_topic:boolean;
+        let publish_topic: boolean;
         areaKeys.forEach(areaKey => {
           sendonce = 0;
-          publish_topic=true;
+          publish_topic = true;
           const channelKeys = Object.keys(bridges.area[areaKey].channel);
           channelKeys.forEach(channelKey => {
             const { type, name: channelName, mode: lightmode } = bridges.area[areaKey].channel[channelKey];
@@ -41,10 +43,10 @@ export const startup = ({
                   color_mode: true,
                   support_color_modes: ["rgbw"]
                 };
-                if(sendonce>=1){
-                  publish_topic=false;
+                if (sendonce >= 1) {
+                  publish_topic = false;
                 }
-                sendonce ++;
+                sendonce++;
               } else {
                 payload = {
                   "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
@@ -129,6 +131,7 @@ export const commandsHandler = ({
       const areaNumber = parseInt(area);
       const channelNumber = parseInt(channel);
       const type = bridges.area[area].channel[channel].type;
+      const mode = bridges.area[area].channel[channel].mdde;
 
       const sendMqttMessage = (data: object) => (err: Error) => {
         if (!err) {
@@ -140,15 +143,65 @@ export const commandsHandler = ({
       };
 
       const processLight = () => {
-        const { brightness, state } = JSON.parse(message.toString());
-        const fade = bridges.area[area].channel[channel].fade * 10;
 
-        const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
-        const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
+        const preparedynateforrgbw = (r: number, green: number, b: number, w: number,brightness:number) => {
+          //assume that 
+        }
+        const { brightness: brightness, state: state, color: color } = JSON.parse(message.toString());
+        var r, g, b, w, temp;
+        if (!(color === undefined)) {
+          //assume that all colors must exisit
+          //todo check all colors
+          temp = color['r'];
+          if (!(temp === undefined)) {
+            r = parseInt(temp);
+          }
 
-        const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+          temp = color['g'];
+          if (!(temp === undefined)) {
+            g = parseInt(temp);
+          }
 
-        dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+          temp = color['b'];
+          if (!(temp === undefined)) {
+            b = parseInt(temp);
+          }
+
+          temp = color['w'];
+          if (!(temp === undefined)) {
+            w = parseInt(temp);
+          }
+        }
+        if (mode === 'rgbw') {
+          if (state === "ON") {
+            dbmanager.dbinsertorupdate((err) => {
+              console.log("updated entry from mqtt with", areaNumber, channelNumber, state, r, g, b, w, brightness);
+              const fade = bridges.area[area].channel[channel].fade * 10;
+
+            }, areaNumber, channelNumber, "ON", r, g, b, w, brightness);
+          } else if (state === "OFF") {
+            dbmanager.dbinsertorupdate((err) => {
+              console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
+
+            }, areaNumber, channelNumber, "ON", r, g, b, w, brightness);
+          } else {
+            //
+            console.error('wrong state');
+            return;
+          }
+
+        } else {
+
+          const fade = bridges.area[area].channel[channel].fade * 10;
+
+          const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
+          const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
+
+          const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+
+          dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+        }
+
       };
       const processChannelLevel = () => {
         const { channel_level: channelLevel } = JSON.parse(message.toString());
