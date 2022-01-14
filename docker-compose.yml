@@ -4,11 +4,12 @@ services:
     build: .
     container_name: "philips-dynalite-mqtt"
     volumes:
-      - ./:/usr/src/app
-      - /usr/src/app/node_modules
-      - /usr/src/app/dist
-      - /usr/src/app/config
+      - ./config:/usr/src/app/config
+      - ./data:/usr/src/app/data
     networks:
       - app
+  bash:
+    build: .
+    entrypoint: /bin/sh
 networks:
   app:
