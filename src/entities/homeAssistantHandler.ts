@@ -242,7 +242,7 @@ export const commandsHandler = ({
                 //add onoff  
                 fade = bridges.area[area].channel[redchannel+4].fade * 10;
                 channelLevel = 1;
-                let temparr = [[28, areaNumber, redchannel+4, 113, channelLevel, fade, 255]];
+                let temparr = [[28, areaNumber, redchannel + 4 -1, 113, channelLevel, fade, 255]];
                 //add red
                 if (!(color['r'] === undefined)) {
                   fade = bridges.area[area].channel[redchannel].fade * 10;
