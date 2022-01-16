@@ -235,10 +235,7 @@ export const commandsHandler = ({
                   return new Promise(resolve => setTimeout(resolve, ms));
                 }
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state, color['r'], color['g'], color['b'], color['w'], brightness);
-                //get index of red channel \
-               
 
-                console.log('red channel is ',redchannel);
                 //add onoff  
                 fade = bridges.area[area].channel[redchannel+4].fade * 10;
                 channelLevel = 1;
