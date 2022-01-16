@@ -206,69 +206,93 @@ export const commandsHandler = ({
               }
               dbmanager.dbinsertorupdate((err) => {
 
-              const delay=  async (ms: number) => {
-                return new Promise( resolve => setTimeout(resolve, ms) );
-              }
+                const delay = async (ms: number) => {
+                  return new Promise(resolve => setTimeout(resolve, ms));
+                }
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state, color['r'], color['g'], color['b'], color['w'], brightness);
-                //create buffer
+                //get index of red channel \
+                var redchannel;
+                
+                switch (bridges.area[area].channel[channelNumber].channel) {
+                  case 'red':
+                    redchannel = channelNumber;
+                    break;
+                  case 'green':
+                    redchannel = channelNumber - 1;
+                    break;
+                  case 'blue':
+                    redchannel = channelNumber - 2;
+                    break;
+                  case 'white':
+                    redchannel = channelNumber - 3;
+                    break;
+                  case 'onoff':
+                    redchannel = channelNumber - 4;
+                    break;
+                    default:
+                      console.error('wrong channel number');
+                      return;
+                      break
+                }
 
+                console.log('red channel is ',redchannel);
                 //add onoff  
-                fade = bridges.area[area].channel['5'].fade * 10;
+                fade = bridges.area[area].channel[redchannel+4].fade * 10;
                 channelLevel = 1;
-                let temparr = [[28, areaNumber, 4, 113, channelLevel, fade, 255]];
+                let temparr = [[28, areaNumber, redchannel+4, 113, channelLevel, fade, 255]];
                 //add red
                 if (!(color['r'] === undefined)) {
-                  fade = bridges.area[area].channel['1'].fade * 10;
+                  fade = bridges.area[area].channel[redchannel].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['r']), brightness);
-                  temparr.push([28, areaNumber, 0, 113, channelLevel, fade, 255])
+                  temparr.push([28, areaNumber, redchannel -1, 113, channelLevel, fade, 255])
                 }
 
                 //add green
                 if (!(color['g'] === undefined)) {
-                  fade = bridges.area[area].channel['2'].fade * 10;
+                  fade = bridges.area[area].channel[redchannel+1].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['g']), brightness);
-                  temparr.push([28, areaNumber, 1, 113, channelLevel, fade, 255]);
+                  temparr.push([28, areaNumber, redchannel +1 -1, 113, channelLevel, fade, 255]);
                 }
 
                 //add blue
                 if (!(color['b'] === undefined)) {
-                  fade = bridges.area[area].channel['3'].fade * 10;
+                  fade = bridges.area[area].channel[redchannel+2].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['b']), brightness);
-                  temparr.push([28, areaNumber, 2, 113, channelLevel, fade, 255]);
+                  temparr.push([28, areaNumber, redchannel + 2 -1, 113, channelLevel, fade, 255]);
                 }
 
                 //add white
                 if (!(color['w'] === undefined)) {
-                  fade = bridges.area[area].channel['4'].fade * 10;
+                  fade = bridges.area[area].channel[redchannel+3].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['b']), brightness);
-                  temparr.push([28, areaNumber, 3, 113, channelLevel, fade, 255]);
+                  temparr.push([28, areaNumber, redchannel + 3 - 1, 113, channelLevel, fade, 255]);
                 }
-               
+
                 var len = temparr.length;
                 var i = 0;
-                 const recursivefunct = () =>  {
-                
-                  console.log('sending tcp packet '+i);
+                const recursivefunct = () => {
+
+                  console.log('sending tcp packet ' + i);
                   var buffer = util.createBuffer(temparr[i]);
                   i++;
-                  dynaliteClient.write(Buffer.from(buffer),(err)=>{
+                  dynaliteClient.write(Buffer.from(buffer), (err) => {
                     if (err) {
                       console.error('error in sending tcp packet');
                       return
                     }
-                    if(i>=len){
+                    if (i >= len) {
                       console.log('no more packets');
                       sendMqttMessageRgbw(_topic, row, state);
                       return;
                     }
                     recursivefunct();
                   });
-                 }
+                }
 
-                 recursivefunct();
+                recursivefunct();
                 // dynaliteClient.write(Buffer.from(buffer),);
                 //send data tcp one by one
-              
+
 
               }, areaNumber, "ON", color['r'], color['g'], color['b'], color['w'], brightness);
             } else if (state === "OFF") {
@@ -277,7 +301,7 @@ export const commandsHandler = ({
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
                 channelLevel = 255;
                 const buffer = util.createBuffer([28, areaNumber, 4, 113, channelLevel, fade, 255]);
-                dynaliteClient.write(Buffer.from(buffer), (err)=>{
+                dynaliteClient.write(Buffer.from(buffer), (err) => {
                   sendMqttMessageRgbw(_topic, null, state);
                 });
               }, areaNumber, "OFF");
