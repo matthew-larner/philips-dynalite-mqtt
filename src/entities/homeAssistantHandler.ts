@@ -200,6 +200,31 @@ export const commandsHandler = ({
               row = { state: "OFF", red: 0, green: 0, blue: 0, white: 0, brigthness: 0 };
             }
             console.log("fetched area", row);
+
+            var redchannel;
+                
+            switch (bridges.area[area].channel[channelNumber].channel) {
+              case 'red':
+                redchannel = channelNumber;
+                break;
+              case 'green':
+                redchannel = channelNumber - 1;
+                break;
+              case 'blue':
+                redchannel = channelNumber - 2;
+                break;
+              case 'white':
+                redchannel = channelNumber - 3;
+                break;
+              case 'onoff':
+                redchannel = channelNumber - 4;
+                break;
+                default:
+                  console.error('wrong channel number');
+                  return;
+                  break
+            }
+            
             if (state === "ON") {
               if ((color === undefined)) {
                 color = {};
@@ -211,29 +236,7 @@ export const commandsHandler = ({
                 }
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state, color['r'], color['g'], color['b'], color['w'], brightness);
                 //get index of red channel \
-                var redchannel;
-                
-                switch (bridges.area[area].channel[channelNumber].channel) {
-                  case 'red':
-                    redchannel = channelNumber;
-                    break;
-                  case 'green':
-                    redchannel = channelNumber - 1;
-                    break;
-                  case 'blue':
-                    redchannel = channelNumber - 2;
-                    break;
-                  case 'white':
-                    redchannel = channelNumber - 3;
-                    break;
-                  case 'onoff':
-                    redchannel = channelNumber - 4;
-                    break;
-                    default:
-                      console.error('wrong channel number');
-                      return;
-                      break
-                }
+               
 
                 console.log('red channel is ',redchannel);
                 //add onoff  
@@ -297,10 +300,11 @@ export const commandsHandler = ({
               }, areaNumber, "ON", color['r'], color['g'], color['b'], color['w'], brightness);
             } else if (state === "OFF") {
               dbmanager.dbinsertorupdate((err) => {
-                fade = bridges.area[area].channel['5'].fade * 10;
+                
+                fade = bridges.area[area].channel[redchannel+4].fade * 10;
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
                 channelLevel = 255;
-                const buffer = util.createBuffer([28, areaNumber, 4, 113, channelLevel, fade, 255]);
+                const buffer = util.createBuffer([28, areaNumber, redchannel + 4-1, 113, channelLevel, fade, 255]);
                 dynaliteClient.write(Buffer.from(buffer), (err) => {
                   sendMqttMessageRgbw(_topic, null, state);
                 });
