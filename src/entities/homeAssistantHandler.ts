@@ -275,7 +275,8 @@ export const commandsHandler = ({
               dbmanager.dbinsertorupdate((err) => {
                 fade = bridges.area[area].channel['5'].fade * 10;
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
-                const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, 255, fade, 255]);
+                channelLevel = 255;
+                const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
                 dynaliteClient.write(Buffer.from(buffer), (err)=>{
                   sendMqttMessageRgbw(_topic, null, state);
                 });
