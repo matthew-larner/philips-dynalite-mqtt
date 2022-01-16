@@ -267,7 +267,7 @@ export const commandsHandler = ({
                 //add white
                 if (!(color['w'] === undefined)) {
                   fade = bridges.area[area].channel[redchannel+3].fade * 10;
-                  channelLevel = getchannellevel(parseInt(color['b']), brightness);
+                  channelLevel = getchannellevel(parseInt(color['w']), brightness);
                   temparr.push([28, areaNumber, redchannel + 3 - 1, 113, channelLevel, fade, 255]);
                 }
 
