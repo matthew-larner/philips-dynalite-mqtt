@@ -195,7 +195,7 @@ export const commandsHandler = ({
 
           //fetch area from db
           dbmanager.dbFetchArea(areaNumber, (row: Object) => {
-            //init the row with default if not exisit
+            //init the row with default if doesn't exist
             if (!row) {
               row = { state: "OFF", red: 0, green: 0, blue: 0, white: 0, brigthness: 0 };
             }
