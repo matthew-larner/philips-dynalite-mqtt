@@ -242,26 +242,26 @@ export const commandsHandler = ({
                 //add onoff  
                 fade = bridges.area[area].channel[redchannel+4].fade * 10;
                 channelLevel = 1;
-                let temparr = [[28, areaNumber, redchannel + 4 -1, 113, channelLevel, fade, 255]];
+                let temparr = [[28, areaNumber, redchannel + 4 - 1, 113, channelLevel, fade, 255]];
                 //add red
                 if (!(color['r'] === undefined)) {
                   fade = bridges.area[area].channel[redchannel].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['r']), brightness);
-                  temparr.push([28, areaNumber, redchannel -1, 113, channelLevel, fade, 255])
+                  temparr.push([28, areaNumber, redchannel + 0 - 1, 113, channelLevel, fade, 255])
                 }
 
                 //add green
                 if (!(color['g'] === undefined)) {
                   fade = bridges.area[area].channel[redchannel+1].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['g']), brightness);
-                  temparr.push([28, areaNumber, redchannel +1 -1, 113, channelLevel, fade, 255]);
+                  temparr.push([28, areaNumber, redchannel + 1 - 1, 113, channelLevel, fade, 255]);
                 }
 
                 //add blue
                 if (!(color['b'] === undefined)) {
                   fade = bridges.area[area].channel[redchannel+2].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['b']), brightness);
-                  temparr.push([28, areaNumber, redchannel + 2 -1, 113, channelLevel, fade, 255]);
+                  temparr.push([28, areaNumber, redchannel + 2 - 1, 113, channelLevel, fade, 255]);
                 }
 
                 //add white
@@ -304,7 +304,7 @@ export const commandsHandler = ({
                 fade = bridges.area[area].channel[redchannel+4].fade * 10;
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
                 channelLevel = 255;
-                const buffer = util.createBuffer([28, areaNumber, redchannel + 4-1, 113, channelLevel, fade, 255]);
+                const buffer = util.createBuffer([28, areaNumber, redchannel + 4 - 1, 113, channelLevel, fade, 255]);
                 dynaliteClient.write(Buffer.from(buffer), (err) => {
                   sendMqttMessageRgbw(_topic, null, state);
                 });
