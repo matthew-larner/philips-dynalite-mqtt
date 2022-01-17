@@ -194,7 +194,7 @@ export const commandsHandler = ({
           let _topic = `${mqttconfig_global.topic_prefix}/a${areaNumber}c${channelNumber}/state`;
 
           //fetch area from db
-          dbmanager.dbFetchArea(areaNumber, (row: Object) => {
+          dbmanager.dbFetchArea(areaNumber, (row: any) => {
             //init the row with default if doesn't exist
             if (!row) {
               row = { state: "OFF", red: 0, green: 0, blue: 0, white: 0, brigthness: 0 };
@@ -244,7 +244,9 @@ export const commandsHandler = ({
                 if (!(color['r'] === undefined)) {
                   fade = bridges.area[area].channel[redchannel].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['r']), brightness);
-                  temparr.push([28, areaNumber, redchannel + 0 - 1, 113, channelLevel, fade, 255])
+                  temparr.push([28, areaNumber, redchannel + 0 - 1, 113, channelLevel, fade, 255]);
+                  //update the red in the row
+                  row.red=color['r'];
                 }
 
                 //add green
@@ -252,6 +254,8 @@ export const commandsHandler = ({
                   fade = bridges.area[area].channel[redchannel+1].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['g']), brightness);
                   temparr.push([28, areaNumber, redchannel + 1 - 1, 113, channelLevel, fade, 255]);
+                   //update the green in the row
+                   row.green=color['g'];
                 }
 
                 //add blue
@@ -259,6 +263,8 @@ export const commandsHandler = ({
                   fade = bridges.area[area].channel[redchannel+2].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['b']), brightness);
                   temparr.push([28, areaNumber, redchannel + 2 - 1, 113, channelLevel, fade, 255]);
+                   //update the blue in the row
+                   row.blue=color['b'];
                 }
 
                 //add white
@@ -266,7 +272,13 @@ export const commandsHandler = ({
                   fade = bridges.area[area].channel[redchannel+3].fade * 10;
                   channelLevel = getchannellevel(parseInt(color['w']), brightness);
                   temparr.push([28, areaNumber, redchannel + 3 - 1, 113, channelLevel, fade, 255]);
+                   //update the white in the row
+                   row.white=color['w'];
                 }
+
+                //upate the brightness
+                row.brightness=brightness;
+
 
                 var len = temparr.length;
                 var i = 0;
@@ -282,6 +294,7 @@ export const commandsHandler = ({
                     }
                     if (i >= len) {
                       console.log('no more packets');
+                      //update the row to the current data
                       sendMqttMessageRgbw(_topic, row, state);
                       return;
                     }
