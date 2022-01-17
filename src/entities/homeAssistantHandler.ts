@@ -247,6 +247,8 @@ export const commandsHandler = ({
                 } else {
                   brightness = row.brightness;
                 }
+
+              //  console.log('brighness is',brightness,row.brightness);
                 //add red
 
                 if (!(color['r'] === undefined)) {

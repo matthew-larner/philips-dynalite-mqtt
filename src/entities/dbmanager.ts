@@ -4,6 +4,8 @@ import * as fs from 'fs';
 let db;
 export const dbinit = async (bridges: any) => {
     var dir = './data';
+    //needs when db is changed
+    //fs.unlinkSync("./data/lightstate.db");
     //open the database
     db = new sqlite3.Database('./data/lightstate.db', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
         if (err) {
@@ -14,7 +16,7 @@ export const dbinit = async (bridges: any) => {
     });
     //creat the table if it doens't exist
     db.serialize(async function () {
-        db.run("CREATE TABLE IF NOT EXISTS rgbw (area INTEGER, state TEXT, red INTEGER DEFAULT 0, green INTEGER DEFAULT 0, blue INTEGER DEFAULT 0, white INTEGER DEFAULT 0, brigthness INTEGER DEFAULT 0)");
+        db.run("CREATE TABLE IF NOT EXISTS rgbw (area INTEGER, state TEXT, red INTEGER DEFAULT 0, green INTEGER DEFAULT 0, blue INTEGER DEFAULT 0, white INTEGER DEFAULT 0, brightness INTEGER DEFAULT 0)");
     });
 };
 
@@ -27,10 +29,10 @@ export const dbclose = () => {
     return false;
 };
 
-const preparesqlinsertquery = (db: any, callback: any, area: number, state: string, red?: string, green?: string, blue?: string, white?: string, brigthness?: string) => {
-    var sql = 'INSERT INTO rgbw (area,state,red,green,blue,white,brigthness) VALUES (?,?,?,?,?,?,?)';
+const preparesqlinsertquery = (db: any, callback: any, area: number, state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
+    var sql = 'INSERT INTO rgbw (area,state,red,green,blue,white,brightness) VALUES (?,?,?,?,?,?,?)';
     var arr = [area, state];
-    console.log('inputs: ', red, green, blue, white, brigthness);
+    console.log('inputs: ', red, green, blue, white, brightness);
     if (!(red === undefined)) {
         arr.push(red);
     } else {
@@ -57,10 +59,10 @@ const preparesqlinsertquery = (db: any, callback: any, area: number, state: stri
         sql = sql.replace(/white,/g, '').replace(/,\?\)/g, ')');
     }
 
-    if (!(brigthness === undefined)) {
-        arr.push(brigthness);
+    if (!(brightness === undefined)) {
+        arr.push(brightness);
     } else {
-        sql = sql.replace(/,brigthness/g, '').replace(/,\?\)/g, ')');
+        sql = sql.replace(/,brightness/g, '').replace(/,\?\)/g, ')');
     }
     console.log(sql);
     db.run(sql, arr, (err) => {
@@ -71,7 +73,7 @@ const preparesqlinsertquery = (db: any, callback: any, area: number, state: stri
     });
 }
 
-const preparesqupdatequery = (db: any, callback: any, area: number,state: string, red?: string, green?: string, blue?: string, white?: string, brigthness?: string) => {
+const preparesqupdatequery = (db: any, callback: any, area: number,state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
     var sql = `UPDATE rgbw SET state = '${state}'`;
     if (!(red === undefined)) {
         sql += ', red = ' + red;
@@ -89,8 +91,8 @@ const preparesqupdatequery = (db: any, callback: any, area: number,state: string
         sql += ', white = ' + white;
     }
 
-    if (!(brigthness === undefined)) {
-        sql += ', brigthness = ' + brigthness;
+    if (!(brightness === undefined)) {
+        sql += ', brightness = ' + brightness;
     }
 
     sql += ' WHERE area=? ';
@@ -105,7 +107,7 @@ const preparesqupdatequery = (db: any, callback: any, area: number,state: string
 
 export const dbFetchArea = (area: number, callback: (row:Object)=>void) => {
     if (db) {
-        var sql = `SELECT rowid as id,state, red,green,blue,white,brigthness FROM rgbw WHERE area=?`;
+        var sql = `SELECT rowid as id,state, red,green,blue,white,brightness FROM rgbw WHERE area=?`;
         db.get(sql, area, function (err, row) {
             if (err) {
                 console.error(err);
@@ -119,11 +121,11 @@ export const dbFetchArea = (area: number, callback: (row:Object)=>void) => {
     }
 }
 
-export const dbinsertorupdate = (callback: any, area: number,  state: string, red?: string, green?: string, blue?: string, white?: string, brigthness?: string) => {
+export const dbinsertorupdate = (callback: any, area: number,  state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
     if (db) {
         //todo check the pararmeters for secuirty 
         //checkif the record exists
-        var sql = `SELECT rowid as id,state, red,green,blue,white,brigthness FROM rgbw WHERE area=? `;
+        var sql = `SELECT rowid as id,state, red,green,blue,white,brightness FROM rgbw WHERE area=? `;
         //console.log(a,ch);
         db.get(sql, area, function (err, row) {
             if (err) {
@@ -131,11 +133,11 @@ export const dbinsertorupdate = (callback: any, area: number,  state: string, re
             } else {
                 if (row) {
                     console.log('row found id: ' + row.id + ": " + row.state, row.red, row.green, row.blue);
-                    preparesqupdatequery(db, callback, area,  state, red, green, blue, white, brigthness);
+                    preparesqupdatequery(db, callback, area,  state, red, green, blue, white, brightness);
                 }
                 else {
                     console.log('record not found so inserting new record');
-                    preparesqlinsertquery(db, callback, area,  state, red, green, blue, white, brigthness);
+                    preparesqlinsertquery(db, callback, area,  state, red, green, blue, white, brightness);
                 }
 
             }
