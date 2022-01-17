@@ -155,7 +155,7 @@ export const commandsHandler = ({
           msg = {
             state: _state,
             color_mode: "rgbw",
-            brightness: row.brigthness,
+            brightness: row.brightness,
             color: {
               r: row.red,
               g: row.green,
@@ -197,7 +197,7 @@ export const commandsHandler = ({
           dbmanager.dbFetchArea(areaNumber, (row: any) => {
             //init the row with default if doesn't exist
             if (!row) {
-              row = { state: "OFF", red: 0, green: 0, blue: 0, white: 0, brigthness: 0 };
+              row = { state: "OFF", red: 0, green: 0, blue: 0, white: 0, brightness: 0 };
             }
             console.log("fetched area", row);
 
