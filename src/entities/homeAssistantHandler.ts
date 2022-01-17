@@ -185,7 +185,7 @@ export const commandsHandler = ({
 
         }
         var { brightness: brightness, state: state, color: color } = JSON.parse(message.toString());
-
+        console.log("received ", brightness, state, color);
         if (mode === 'rgbw') {
 
           var fade, channelLevel;
@@ -202,7 +202,7 @@ export const commandsHandler = ({
             console.log("fetched area", row);
 
             var redchannel;
-                
+
             switch (bridges.area[area].channel[channelNumber].channel) {
               case 'red':
                 redchannel = channelNumber;
@@ -219,12 +219,12 @@ export const commandsHandler = ({
               case 'onoff':
                 redchannel = channelNumber - 4;
                 break;
-                default:
-                  console.error('wrong channel number');
-                  return;
-                  break
+              default:
+                console.error('wrong channel number');
+                return;
+                break
             }
-            
+
             if (state === "ON") {
               if ((color === undefined)) {
                 color = {};
@@ -237,48 +237,58 @@ export const commandsHandler = ({
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state, color['r'], color['g'], color['b'], color['w'], brightness);
 
                 //add onoff  
-                fade = bridges.area[area].channel[redchannel+4].fade * 10;
+                fade = bridges.area[area].channel[redchannel + 4].fade * 10;
                 channelLevel = 1;
                 let temparr = [[28, areaNumber, redchannel + 4 - 1, 113, channelLevel, fade, 255]];
-                //add red
-                if (!(color['r'] === undefined)) {
-                  fade = bridges.area[area].channel[redchannel].fade * 10;
-                  channelLevel = getchannellevel(parseInt(color['r']), brightness);
-                  temparr.push([28, areaNumber, redchannel + 0 - 1, 113, channelLevel, fade, 255]);
-                  //update the red in the row
-                  row.red=color['r'];
+
+                //update the brightness
+                if (!(brightness === undefined)) {
+                  row.brightness = brightness;
+                } else {
+                  brightness = row.brightness;
                 }
+                //add red
+
+                if (!(color['r'] === undefined)) {
+                  //update the red in the row
+                  row.red = color['r'];
+                }
+
+                fade = bridges.area[area].channel[redchannel].fade * 10;
+                channelLevel = getchannellevel(parseInt(row.red), brightness);
+                temparr.push([28, areaNumber, redchannel + 0 - 1, 113, channelLevel, fade, 255]);
 
                 //add green
                 if (!(color['g'] === undefined)) {
-                  fade = bridges.area[area].channel[redchannel+1].fade * 10;
-                  channelLevel = getchannellevel(parseInt(color['g']), brightness);
-                  temparr.push([28, areaNumber, redchannel + 1 - 1, 113, channelLevel, fade, 255]);
-                   //update the green in the row
-                   row.green=color['g'];
+
+                  //update the green in the row
+                  row.green = color['g'];
                 }
+
+                fade = bridges.area[area].channel[redchannel + 1].fade * 10;
+                channelLevel = getchannellevel(parseInt(row.green), brightness);
+                temparr.push([28, areaNumber, redchannel + 1 - 1, 113, channelLevel, fade, 255]);
 
                 //add blue
                 if (!(color['b'] === undefined)) {
-                  fade = bridges.area[area].channel[redchannel+2].fade * 10;
-                  channelLevel = getchannellevel(parseInt(color['b']), brightness);
-                  temparr.push([28, areaNumber, redchannel + 2 - 1, 113, channelLevel, fade, 255]);
-                   //update the blue in the row
-                   row.blue=color['b'];
+                  //update the blue in the row
+                  row.blue = color['b'];
                 }
+
+                fade = bridges.area[area].channel[redchannel + 2].fade * 10;
+                channelLevel = getchannellevel(parseInt(row.blue), brightness);
+                temparr.push([28, areaNumber, redchannel + 2 - 1, 113, channelLevel, fade, 255]);
 
                 //add white
                 if (!(color['w'] === undefined)) {
-                  fade = bridges.area[area].channel[redchannel+3].fade * 10;
-                  channelLevel = getchannellevel(parseInt(color['w']), brightness);
-                  temparr.push([28, areaNumber, redchannel + 3 - 1, 113, channelLevel, fade, 255]);
-                   //update the white in the row
-                   row.white=color['w'];
+
+                  //update the white in the row
+                  row.white = color['w'];
                 }
 
-                //update the brightness
-                row.brightness=brightness;
-
+                fade = bridges.area[area].channel[redchannel + 3].fade * 10;
+                channelLevel = getchannellevel(parseInt(row.white), brightness);
+                temparr.push([28, areaNumber, redchannel + 3 - 1, 113, channelLevel, fade, 255]);
 
                 var len = temparr.length;
                 var i = 0;
@@ -303,15 +313,12 @@ export const commandsHandler = ({
                 }
 
                 recursivefunct();
-                // dynaliteClient.write(Buffer.from(buffer),);
-                //send data tcp one by one
-
 
               }, areaNumber, "ON", color['r'], color['g'], color['b'], color['w'], brightness);
             } else if (state === "OFF") {
               dbmanager.dbinsertorupdate((err) => {
-                
-                fade = bridges.area[area].channel[redchannel+4].fade * 10;
+
+                fade = bridges.area[area].channel[redchannel + 4].fade * 10;
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
                 channelLevel = 255;
                 const buffer = util.createBuffer([28, areaNumber, redchannel + 4 - 1, 113, channelLevel, fade, 255]);
