@@ -276,7 +276,7 @@ export const commandsHandler = ({
                    row.white=color['w'];
                 }
 
-                //upate the brightness
+                //update the brightness
                 row.brightness=brightness;
 
 
