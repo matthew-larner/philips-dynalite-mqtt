@@ -51,7 +51,7 @@ export const startup = ({
                   publish_topic = false;
                 }
                 sendonce++;
-              } else {
+              } else if (lightmode === 'dimmer') {
                 payload = {
                   "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
                   name,
@@ -61,6 +61,17 @@ export const startup = ({
                   schema: "json",
                   availability_topic: `${mqttConfig.availability_topic}`,
                   brightness: true
+                };
+              } else {
+                payload = {
+                  "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
+                  name,
+                  unique_id: name.toLowerCase().replace(/ /g, "_"),
+                  cmd_t: "~/set",
+                  stat_t: "~/state",
+                  schema: "json",
+                  availability_topic: `${mqttConfig.availability_topic}`,
+                  brightness: false
                 };
               }
 
