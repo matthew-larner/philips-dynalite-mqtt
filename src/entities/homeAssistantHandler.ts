@@ -58,6 +58,7 @@ export const startup = ({
                 }
                 sendonce++;
               } else if (lightmode === 'dimmer') {
+                publish_topic = true;
                 payload = {
                   "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
                   name,
@@ -69,6 +70,7 @@ export const startup = ({
                   brightness: true
                 };
               } else {
+                publish_topic = true;
                 payload = {
                   "~": `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}`,
                   name,
@@ -82,6 +84,7 @@ export const startup = ({
               }
 
             } else if (type === 'motion') {
+              publish_topic = true;
               topic = `${mqttConfig.discovery_prefix}/binary_sensor/a${areaKey}c${channelKey}/config`;
               payload = {
                 name: `${bridges.area[areaKey].name} ${channelName}`,
@@ -90,6 +93,7 @@ export const startup = ({
                 availability_topic: `${mqttConfig.availability_topic}`
               };
             } else if (type === 'temperature') {
+              publish_topic = true;
               topic = `${mqttConfig.discovery_prefix}/sensor/a${areaKey}c${channelKey}/config`;
               payload = {
                 name: `${bridges.area[areaKey].name} ${channelName}`,
