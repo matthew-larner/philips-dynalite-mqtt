@@ -143,3 +143,8 @@ dynalite:
 - `type` is either: `light` (a light), `motion` (a motion sensor), `temperature` (antumbra temperature reading), `channel_level` (a channel level)
 - `mode` is either: `onoff` (a light that allows on/off control only), `dimmer` (a light that supports adjustable brightness), `rgbw` (a RGBW light). Can be used with type=light only
 - `fade`: fade time in seconds. Can be used with type=light only
+
+## Extra Setup for Motion Sensors
+If you have any motion sensors, you'll need to add some configuration within Dynalite.
+Here's an example:
+[Dynalite Motion Sensor Config](motion_sensor.jpg)
