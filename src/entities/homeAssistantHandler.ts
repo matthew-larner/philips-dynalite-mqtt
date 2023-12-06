@@ -50,6 +50,7 @@ export const startup = ({
                 // Reset 'sendonce' count in case for multiple RGBW lights in a row
                 if (sendonce >= 5) {
                   sendonce = 0;
+                  publish_topic = true;
                 }
                 // Only publish on first channel for RGBW light mode
                 if (sendonce >= 1) {
