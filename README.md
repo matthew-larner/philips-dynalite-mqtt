@@ -90,31 +90,31 @@ dynalite:
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-              channel: red
+              channel: onoff
               fade: 0.0
             '2':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-	      channel: green
+	      channel: red
               fade: 0.0
             '3':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-              channel: blue
+              channel: green
               fade: 0.0
             '4':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-              channel: white
+              channel: blue
               fade: 0.0
             '5':
               name: Cupboard Strip Light
               type: light
               mode: rgbw
-              channel: onoff
+              channel: white
               fade: 0.0
         '101':
           name: Aircon 1
