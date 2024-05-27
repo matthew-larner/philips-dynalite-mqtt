@@ -360,9 +360,32 @@ export const commandsHandler = ({
 
           const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
           const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
+          
+          // Determine whether to send preset or channel level
+          if (state === "ON") {
+            // Send presets if just on command
+            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+            
+            // ** TEMP TCP STRING USING PRESETS INSTEAD OF CHANNEL LEVELS ****
+            const tempbuffer = util.createBuffer([172, 4, 11, 220, 0, 50, 0, areaNumber, 255, 0, 0, channelNumber, 0, 1, 0, 0, fade, 0]);  // TEMP - *** REMOVE ME ***
+            console.log(`Debug buffer: ${tempbuffer}`); // TEMP - *** REMOVE ME ***
+            
+          } else if (state === "OFF") {
+            // Send presets if just off command
+            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+            
+            // ** TEMP TCP STRING USING PRESETS INSTEAD OF CHANNEL LEVELS ****
+            const tempbuffer = util.createBuffer([172, 4, 11, 220, 0, 50, 0, areaNumber, 255, 0, 0, channelNumber, 0, 4, 0, 0, fade, 0]);  // TEMP - *** REMOVE ME ***
+            console.log(`Debug buffer: ${tempbuffer}`); // TEMP - *** REMOVE ME ***
+          }else{
+            // Send channel level if brightness command
+            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+            
+            // ** TEMP - REMOVE LOG LINE
+            console.log(`Debug buffer: ${buffer}`); // TEMP
+          }
 
-          const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
-
+          // Send to Dynalite and update MQTT
           dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
         }
 
