@@ -41,3 +41,16 @@ export const createBuffer = (buffer: number[]) => {
 
   return Buffer.from([...buffer, checkSum]);
 };
+
+// Function to calculate Fletcher's 16-bit checksum using modulo 256
+export const createBufferFletcher16Mod256 = (buffer: number[]) => {
+  let sum1 = 0;
+  let sum2 = 0;
+
+  for (let i = 0; i < buffer.length; i++) {
+    sum1 = (sum1 + buffer[i]) % 256;
+    sum2 = (sum2 + sum1) % 256;
+  }
+
+  return Buffer.from([...buffer, sum2, sum1]);
+};

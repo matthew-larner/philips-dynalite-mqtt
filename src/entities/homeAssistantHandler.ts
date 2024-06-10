@@ -88,6 +88,7 @@ export const startup = ({
               topic = `${mqttConfig.discovery_prefix}/binary_sensor/a${areaKey}c${channelKey}/config`;
               payload = {
                 name: `${bridges.area[areaKey].name} ${channelName}`,
+                unique_id: name.toLowerCase().replace(/ /g, "_"),
                 device_class: "motion",
                 state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/state`,
                 availability_topic: `${mqttConfig.availability_topic}`
@@ -97,6 +98,7 @@ export const startup = ({
               topic = `${mqttConfig.discovery_prefix}/sensor/a${areaKey}c${channelKey}/config`;
               payload = {
                 name: `${bridges.area[areaKey].name} ${channelName}`,
+                unique_id: name.toLowerCase().replace(/ /g, "_"),
                 device_class: "temperature",
                 state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/temp`,
                 availability_topic: `${mqttConfig.availability_topic}`,
@@ -206,7 +208,7 @@ export const commandsHandler = ({
 
         }
         var { brightness: brightness, state: state, color: color } = JSON.parse(message.toString());
-        console.log("received ", brightness, state, color);
+        console.log("received from MQTT: ", brightness, state, color);
         if (mode === 'rgbw') {
 
           var fade, channelLevel;
@@ -258,7 +260,7 @@ export const commandsHandler = ({
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state, color['r'], color['g'], color['b'], color['w'], brightness);
 
                 //add onoff  
-                fade = bridges.area[area].channel[onoffchannel + 0].fade * 10;
+                fade = bridges.area[area].channel[onoffchannel + 0].fade * 100;
                 channelLevel = 1;
                 let temparr = [[28, areaNumber, onoffchannel + 0 - 1, 113, channelLevel, fade, 255]];
 
@@ -277,7 +279,7 @@ export const commandsHandler = ({
                   row.red = color['r'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 1].fade * 10;
+                fade = bridges.area[area].channel[onoffchannel + 1].fade * 100;
                 channelLevel = getchannellevel(parseInt(row.red), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 1 - 1, 113, channelLevel, fade, 255]);
 
@@ -288,7 +290,7 @@ export const commandsHandler = ({
                   row.green = color['g'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 2].fade * 10;
+                fade = bridges.area[area].channel[onoffchannel + 2].fade * 100;
                 channelLevel = getchannellevel(parseInt(row.green), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 2 - 1, 113, channelLevel, fade, 255]);
 
@@ -298,7 +300,7 @@ export const commandsHandler = ({
                   row.blue = color['b'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 3].fade * 10;
+                fade = bridges.area[area].channel[onoffchannel + 3].fade * 100;
                 channelLevel = getchannellevel(parseInt(row.blue), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 3 - 1, 113, channelLevel, fade, 255]);
 
@@ -309,7 +311,7 @@ export const commandsHandler = ({
                   row.white = color['w'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 4].fade * 10;
+                fade = bridges.area[area].channel[onoffchannel + 4].fade * 100;
                 channelLevel = getchannellevel(parseInt(row.white), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 4 - 1, 113, channelLevel, fade, 255]);
 
@@ -341,7 +343,7 @@ export const commandsHandler = ({
             } else if (state === "OFF") {
               dbmanager.dbinsertorupdate((err) => {
 
-                fade = bridges.area[area].channel[onoffchannel + 0].fade * 10;
+                fade = bridges.area[area].channel[onoffchannel + 0].fade * 100;
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
                 channelLevel = 255;
                 const buffer = util.createBuffer([28, areaNumber, onoffchannel + 0 - 1, 113, channelLevel, fade, 255]);
@@ -352,41 +354,37 @@ export const commandsHandler = ({
             }
           });
 
-
-
         } else {
 
-          const fade = bridges.area[area].channel[channel].fade * 10;
-
-          const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
-          const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
-          
           // Determine whether to send preset or channel level
-          if (state === "ON") {
-            // Send presets if just on command
-            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+          if (state === "ON" && brightness === undefined) {
+            // Send presets if just ON command
             
-            // ** TEMP TCP STRING USING PRESETS INSTEAD OF CHANNEL LEVELS ****
-            const tempbuffer = util.createBuffer([172, 4, 11, 220, 0, 50, 0, areaNumber, 255, 0, 0, channelNumber, 0, 1, 0, 0, fade, 0]);  // TEMP - *** REMOVE ME ***
-            console.log(`Debug buffer: ${tempbuffer}`); // TEMP - *** REMOVE ME ***
+            // Send to Dynalite and update MQTT
+            const fade = bridges.area[area].channel[channel].fade * 100;
+            const buffer = util.createBufferFletcher16Mod256([172, 4, 17, 220, 0, 38, 0, areaNumber, 255, 0, 0, channelNumber, 0, 1, 0, 0, fade, 0]);
+            dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
             
-          } else if (state === "OFF") {
-            // Send presets if just off command
-            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+          } else if (state === "OFF" && brightness === undefined) {
+            // Send presets if just OFF command
             
-            // ** TEMP TCP STRING USING PRESETS INSTEAD OF CHANNEL LEVELS ****
-            const tempbuffer = util.createBuffer([172, 4, 11, 220, 0, 50, 0, areaNumber, 255, 0, 0, channelNumber, 0, 4, 0, 0, fade, 0]);  // TEMP - *** REMOVE ME ***
-            console.log(`Debug buffer: ${tempbuffer}`); // TEMP - *** REMOVE ME ***
-          }else{
+            // Send to Dynalite and update MQTT
+            const fade = bridges.area[area].channel[channel].fade * 100;
+            const buffer = util.createBufferFletcher16Mod256([172, 4, 17, 220, 0, 38, 0, areaNumber, 255, 0, 0, channelNumber, 0, 4, 0, 0, fade, 0]); 
+            dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+          } else {
             // Send channel level if brightness command
-            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
-            
-            // ** TEMP - REMOVE LOG LINE
-            console.log(`Debug buffer: ${buffer}`); // TEMP
-          }
 
-          // Send to Dynalite and update MQTT
-          dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+            // Calculate brightness
+            const limitMinimumBrightness = (val: number) => val < 1 ? 1 : val;
+            const channelLevel = !isNaN(brightness) ? limitMinimumBrightness(255 - brightness) : state === "ON" ? 1 : 255;
+
+            // Send to Dynalite and update MQTT
+            const fade = bridges.area[area].channel[channel].fade * 10;
+            const buffer = util.createBuffer([28, areaNumber, channelNumber - 1, 113, channelLevel, fade, 255]);
+            dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
+          }
+ 
         }
 
       };
