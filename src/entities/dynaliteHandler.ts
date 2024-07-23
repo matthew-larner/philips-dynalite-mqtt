@@ -65,13 +65,23 @@ export const commandsHandler = ({
       };
       const processTemperature = (x: number, y: number) => {
         const temp = (Math.round(parseFloat(`${x}.${y}`) * 10) / 10).toString();
-        sendMqttTemperatureMessage(temp);
+
+        let payload: object;
+        payload = { temperature: temp };
+        
+        sendMqttStateMessage(JSON.stringify(payload));
       }
-      const processHvac = (data: string) => {
-        sendMqttStateMessage(data);
+      const processHvac = (value: number) => {
+        let payload: object;
+        payload = { channel_level: value };
+        
+        sendMqttStateMessage(JSON.stringify(payload));
       };
-      const processChannelLevel = (data: string) => {
-        sendMqttStateMessage(data);
+      const processChannelLevel = (value: number) => {
+        let payload: object;
+        payload = { channel_level: value };
+        
+        sendMqttStateMessage(JSON.stringify(payload));
       };
 
       if (thirdDecimal === 17) {
@@ -81,9 +91,9 @@ export const commandsHandler = ({
       } else if (thirdDecimal === 87) {
         processTemperature(data[10], data[11]);
       } else if (thirdDecimal === 86) {
-        processHvac(data[10].toString());
+        processHvac(data[10]);
       } else if (thirdDecimal === 16) {
-        processChannelLevel(data[12].toString());
+        processChannelLevel(data[12]);
       } else {
         console.log('Dynalite ignored message 3rd character decimal:', thirdDecimal);
       }

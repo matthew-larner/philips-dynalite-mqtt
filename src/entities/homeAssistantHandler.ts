@@ -100,9 +100,10 @@ export const startup = ({
                 name: `${bridges.area[areaKey].name} ${channelName}`,
                 unique_id: name.toLowerCase().replace(/ /g, "_"),
                 device_class: "temperature",
-                state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/temp`,
+                state_topic: `${mqttConfig.topic_prefix}/a${areaKey}c${channelKey}/state`,
                 availability_topic: `${mqttConfig.availability_topic}`,
-                unit_of_measurement: "°C"
+                unit_of_measurement: "°C",
+                value_template: "{{ value_json.temperature }}"
               };
             } else {
               // skip other types
