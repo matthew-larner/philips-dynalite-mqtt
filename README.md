@@ -1,7 +1,11 @@
 # Philips Dynalite MQTT
 A docker container to convert Philips Dynalite RS485 commands to MQTT. 
 Supports lights, motion sensors and temperature readings from Antumbra switches/displays.
-This container can be run in docker and connects to MQTT to communicate with Home Assistant. This project has no affiliation with Philips/Dynalite or Home Assistant. This is currently in beta. Use at your own risk.
+This container can be run in docker and connects to MQTT to communicate with Home Assistant. This project has no affiliation with Philips/Dynalite or Home Assistant. 
+
+If you get value from this project, please support me!
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/matthewlars)
 
 ## Setup Steps
 1. Create a [MQTT server](https://hub.docker.com/_/eclipse-mosquitto)
