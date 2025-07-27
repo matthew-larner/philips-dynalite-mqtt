@@ -20,7 +20,7 @@ version: '3'
 services:
   dynalite:
     container_name: dynalite
-    image: matthewlarner/philips-dynalite-mqtt:latest
+    image: ghcr.io/matthewlarner/philips-dynalite-mqtt:latest
     volumes:
       - ./config:/usr/src/app/config
       - ./data:/usr/src/app/data
