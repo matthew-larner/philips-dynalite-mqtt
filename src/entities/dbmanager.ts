@@ -16,7 +16,7 @@ export const dbinit = async (bridges: any) => {
     });
     //creat the table if it doens't exist
     db.serialize(async function () {
-        db.run("CREATE TABLE IF NOT EXISTS rgbw (area INTEGER, state TEXT, red INTEGER DEFAULT 0, green INTEGER DEFAULT 0, blue INTEGER DEFAULT 0, white INTEGER DEFAULT 0, brightness INTEGER DEFAULT 0)");
+        db.run("CREATE TABLE IF NOT EXISTS rgbw (area INTEGER, channel INTEGER DEFAULT 0, state TEXT, red INTEGER DEFAULT 0, green INTEGER DEFAULT 0, blue INTEGER DEFAULT 0, white INTEGER DEFAULT 0, brightness INTEGER DEFAULT 0)");
     });
 };
 
@@ -29,9 +29,9 @@ export const dbclose = () => {
     return false;
 };
 
-const preparesqlinsertquery = (db: any, callback: any, area: number, state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
-    var sql = 'INSERT INTO rgbw (area,state,red,green,blue,white,brightness) VALUES (?,?,?,?,?,?,?)';
-    var arr = [area, state];
+const preparesqlinsertquery = (db: any, callback: any, area: number, channel: number, state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
+    var sql = 'INSERT INTO rgbw (area,channel,state,red,green,blue,white,brightness) VALUES (?,?,?,?,?,?,?,?)';
+    var arr = [area, channel, state];
     console.log('inputs: ', red, green, blue, white, brightness);
     if (!(red === undefined)) {
         arr.push(red);
@@ -73,7 +73,7 @@ const preparesqlinsertquery = (db: any, callback: any, area: number, state: stri
     });
 }
 
-const preparesqupdatequery = (db: any, callback: any, area: number,state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
+const preparesqupdatequery = (db: any, callback: any, area: number, channel: number, state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
     var sql = `UPDATE rgbw SET state = '${state}'`;
     if (!(red === undefined)) {
         sql += ', red = ' + red;
@@ -95,9 +95,9 @@ const preparesqupdatequery = (db: any, callback: any, area: number,state: string
         sql += ', brightness = ' + brightness;
     }
 
-    sql += ' WHERE area=? ';
+    sql += ' WHERE area=? AND channel=? ';
     console.log(sql);
-    db.run(sql, area, (err) => {
+    db.run(sql, [area, channel], (err) => {
         if (err) {
             return console.error(err.message);
         }
@@ -105,10 +105,10 @@ const preparesqupdatequery = (db: any, callback: any, area: number,state: string
     });
 }
 
-export const dbFetchArea = (area: number, callback: (row:Object)=>void) => {
+export const dbFetchArea = (area: number, channel: number, callback: (row:Object)=>void) => {
     if (db) {
-        var sql = `SELECT rowid as id,state, red,green,blue,white,brightness FROM rgbw WHERE area=?`;
-        db.get(sql, area, function (err, row) {
+        var sql = `SELECT rowid as id,state, red,green,blue,white,brightness FROM rgbw WHERE area=? AND channel=?`;
+        db.get(sql, [area, channel], function (err, row) {
             if (err) {
                 console.error(err);
             } else {
@@ -121,23 +121,23 @@ export const dbFetchArea = (area: number, callback: (row:Object)=>void) => {
     }
 }
 
-export const dbinsertorupdate = (callback: any, area: number,  state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
+export const dbinsertorupdate = (callback: any, area: number, channel: number, state: string, red?: string, green?: string, blue?: string, white?: string, brightness?: string) => {
     if (db) {
         //todo check the pararmeters for secuirty 
         //checkif the record exists
-        var sql = `SELECT rowid as id,state, red,green,blue,white,brightness FROM rgbw WHERE area=? `;
+        var sql = `SELECT rowid as id,state, red,green,blue,white,brightness FROM rgbw WHERE area=? AND channel=? `;
         //console.log(a,ch);
-        db.get(sql, area, function (err, row) {
+        db.get(sql, [area, channel], function (err, row) {
             if (err) {
                 console.error(err);
             } else {
                 if (row) {
                     console.log('row found id: ' + row.id + ": " + row.state, row.red, row.green, row.blue);
-                    preparesqupdatequery(db, callback, area,  state, red, green, blue, white, brightness);
+                    preparesqupdatequery(db, callback, area, channel, state, red, green, blue, white, brightness);
                 }
                 else {
                     console.log('record not found so inserting new record');
-                    preparesqlinsertquery(db, callback, area,  state, red, green, blue, white, brightness);
+                    preparesqlinsertquery(db, callback, area, channel, state, red, green, blue, white, brightness);
                 }
 
             }
@@ -150,4 +150,3 @@ export const dbinsertorupdate = (callback: any, area: number,  state: string, re
     }
 
 };
-

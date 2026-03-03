@@ -8,6 +8,25 @@ import * as dbmanager from './dbmanager';
 
 
 let mqttconfig_global: any;
+const pendingRgbwPowerOffByLight = new Map<string, NodeJS.Timeout>();
+const rgbwCommandGenerationByLight = new Map<string, number>();
+
+const createRgbwLightKey = (areaNumber: number, onoffchannel: number) => `${areaNumber}:${onoffchannel}`;
+
+const cancelPendingRgbwPowerOff = (lightKey: string) => {
+  const pendingTimer = pendingRgbwPowerOffByLight.get(lightKey);
+  if (pendingTimer) {
+    clearTimeout(pendingTimer);
+    pendingRgbwPowerOffByLight.delete(lightKey);
+  }
+};
+
+const bumpRgbwGeneration = (lightKey: string) => {
+  const nextGeneration = (rgbwCommandGenerationByLight.get(lightKey) || 0) + 1;
+  rgbwCommandGenerationByLight.set(lightKey, nextGeneration);
+  return nextGeneration;
+};
+
 export const startup = ({
   mqttConfig,
   bridges
@@ -217,41 +236,65 @@ export const commandsHandler = ({
           var uniqueid = name.toLowerCase().replace(/ /g, "_");
           let _topic = `${mqttconfig_global.topic_prefix}/a${areaNumber}c${channelNumber}/state`;
 
-          //fetch area from db
-          dbmanager.dbFetchArea(areaNumber, (row: any) => {
+          var onoffchannel;
+
+          switch (bridges.area[area].channel[channelNumber].channel) {
+            case 'onoff':
+              onoffchannel = channelNumber;
+              break;
+            case 'red':
+              onoffchannel = channelNumber - 1;
+              break;
+            case 'green':
+              onoffchannel = channelNumber - 2;
+              break;
+            case 'blue':
+              onoffchannel = channelNumber - 3;
+              break;
+            case 'white':
+              onoffchannel = channelNumber - 4;
+              break;
+            default:
+              console.error('wrong channel number');
+              return;
+              break
+          }
+          const lightKey = createRgbwLightKey(areaNumber, onoffchannel);
+
+          //fetch area from db for this exact rgbw light (area + onoff channel)
+          dbmanager.dbFetchArea(areaNumber, onoffchannel, (row: any) => {
             //init the row with default if doesn't exist
             if (!row) {
               row = { state: "OFF", red: 0, green: 0, blue: 0, white: 0, brightness: 0 };
             }
             console.log("fetched area", row);
 
-            var onoffchannel;
-
-            switch (bridges.area[area].channel[channelNumber].channel) {
-              case 'onoff':
-                onoffchannel = channelNumber;
-                break;
-              case 'red':
-                onoffchannel = channelNumber - 1;
-                break;
-              case 'green':
-                onoffchannel = channelNumber - 2;
-                break;
-              case 'blue':
-                onoffchannel = channelNumber - 3;
-                break;
-              case 'white':
-                onoffchannel = channelNumber - 4;
-                break;
-              default:
-                console.error('wrong channel number');
-                return;
-                break
-            }
-
             if (state === "ON") {
+              cancelPendingRgbwPowerOff(lightKey);
+              bumpRgbwGeneration(lightKey);
               if ((color === undefined)) {
                 color = {};
+              }
+              const hasRequestedColor =
+                color['r'] !== undefined ||
+                color['g'] !== undefined ||
+                color['b'] !== undefined ||
+                color['w'] !== undefined;
+              const hasStoredColor =
+                Number(row.red) > 0 ||
+                Number(row.green) > 0 ||
+                Number(row.blue) > 0 ||
+                Number(row.white) > 0;
+
+              // Fresh/empty DB can leave RGBW channels at 0. If ON arrives without brightness/color,
+              // choose a sane default so the light actually turns on.
+              if (brightness === undefined && !hasRequestedColor && !hasStoredColor) {
+                brightness = 255;
+                color['r'] = 0;
+                color['g'] = 0;
+                color['b'] = 0;
+                color['w'] = 255;
+                console.log("No stored RGBW state found; defaulting ON to white at full brightness");
               }
               dbmanager.dbinsertorupdate((err) => {
 
@@ -261,7 +304,7 @@ export const commandsHandler = ({
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state, color['r'], color['g'], color['b'], color['w'], brightness);
 
                 //add onoff  
-                fade = bridges.area[area].channel[onoffchannel + 0].fade * 100;
+                fade = bridges.area[area].channel[onoffchannel + 0].fade * 10;
                 channelLevel = 1;
                 let temparr = [[28, areaNumber, onoffchannel + 0 - 1, 113, channelLevel, fade, 255]];
 
@@ -280,7 +323,7 @@ export const commandsHandler = ({
                   row.red = color['r'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 1].fade * 100;
+                fade = bridges.area[area].channel[onoffchannel + 1].fade * 10;
                 channelLevel = getchannellevel(parseInt(row.red), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 1 - 1, 113, channelLevel, fade, 255]);
 
@@ -291,7 +334,7 @@ export const commandsHandler = ({
                   row.green = color['g'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 2].fade * 100;
+                fade = bridges.area[area].channel[onoffchannel + 2].fade * 10;
                 channelLevel = getchannellevel(parseInt(row.green), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 2 - 1, 113, channelLevel, fade, 255]);
 
@@ -301,7 +344,7 @@ export const commandsHandler = ({
                   row.blue = color['b'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 3].fade * 100;
+                fade = bridges.area[area].channel[onoffchannel + 3].fade * 10;
                 channelLevel = getchannellevel(parseInt(row.blue), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 3 - 1, 113, channelLevel, fade, 255]);
 
@@ -312,7 +355,7 @@ export const commandsHandler = ({
                   row.white = color['w'];
                 }
 
-                fade = bridges.area[area].channel[onoffchannel + 4].fade * 100;
+                fade = bridges.area[area].channel[onoffchannel + 4].fade * 10;
                 channelLevel = getchannellevel(parseInt(row.white), brightness);
                 temparr.push([28, areaNumber, onoffchannel + 4 - 1, 113, channelLevel, fade, 255]);
 
@@ -340,18 +383,71 @@ export const commandsHandler = ({
 
                 recursivefunct();
 
-              }, areaNumber, "ON", color['r'], color['g'], color['b'], color['w'], brightness);
+              }, areaNumber, onoffchannel, "ON", color['r'], color['g'], color['b'], color['w'], brightness);
             } else if (state === "OFF") {
+              cancelPendingRgbwPowerOff(lightKey);
+              const commandGeneration = bumpRgbwGeneration(lightKey);
               dbmanager.dbinsertorupdate((err) => {
 
-                fade = bridges.area[area].channel[onoffchannel + 0].fade * 100;
                 console.log("updated entry from mqtt with", areaNumber, channelNumber, state);
-                channelLevel = 255;
-                const buffer = util.createBuffer([28, areaNumber, onoffchannel + 0 - 1, 113, channelLevel, fade, 255]);
-                dynaliteClient.write(Buffer.from(buffer), (err) => {
-                  sendMqttMessageRgbw(_topic, null, state);
-                });
-              }, areaNumber, "OFF");
+                const temparr: number[][] = [];
+                const rgbwFadeSeconds = [
+                  bridges.area[area].channel[onoffchannel + 1].fade || 0,
+                  bridges.area[area].channel[onoffchannel + 2].fade || 0,
+                  bridges.area[area].channel[onoffchannel + 3].fade || 0,
+                  bridges.area[area].channel[onoffchannel + 4].fade || 0
+                ];
+                const maxFadeMs = Math.max(...rgbwFadeSeconds) * 1000;
+                const powerOffDelayMs = maxFadeMs > 0 ? maxFadeMs + 100 : 0;
+
+                // Fade RGBW channels down to off before cutting power
+                fade = bridges.area[area].channel[onoffchannel + 1].fade * 10;
+                temparr.push([28, areaNumber, onoffchannel + 1 - 1, 113, 255, fade, 255]);
+
+                fade = bridges.area[area].channel[onoffchannel + 2].fade * 10;
+                temparr.push([28, areaNumber, onoffchannel + 2 - 1, 113, 255, fade, 255]);
+
+                fade = bridges.area[area].channel[onoffchannel + 3].fade * 10;
+                temparr.push([28, areaNumber, onoffchannel + 3 - 1, 113, 255, fade, 255]);
+
+                fade = bridges.area[area].channel[onoffchannel + 4].fade * 10;
+                temparr.push([28, areaNumber, onoffchannel + 4 - 1, 113, 255, fade, 255]);
+
+                const powerOff = () => {
+                  // Ignore stale OFF timers after newer ON/OFF commands for the same area/channel.
+                  if (rgbwCommandGenerationByLight.get(lightKey) !== commandGeneration) {
+                    return;
+                  }
+                  // Power channel should not fade
+                  const powerBuffer = util.createBuffer([28, areaNumber, onoffchannel + 0 - 1, 113, 255, 0, 255]);
+                  pendingRgbwPowerOffByLight.delete(lightKey);
+                  dynaliteClient.write(Buffer.from(powerBuffer), (err) => {
+                    sendMqttMessageRgbw(_topic, null, state);
+                  });
+                };
+
+                const len = temparr.length;
+                let i = 0;
+                const recursivefunct = () => {
+                  const buffer = util.createBuffer(temparr[i]);
+                  i++;
+                  dynaliteClient.write(Buffer.from(buffer), (err) => {
+                    if (err) {
+                      console.error('error in sending tcp packet');
+                      return;
+                    }
+                    if (i >= len) {
+                      // Writing commands only guarantees they were sent, not that fade completed on hardware.
+                      const powerOffTimer = setTimeout(powerOff, powerOffDelayMs);
+                      pendingRgbwPowerOffByLight.set(lightKey, powerOffTimer);
+                      return;
+                    }
+                    recursivefunct();
+                  });
+                };
+
+                recursivefunct();
+              }, areaNumber, onoffchannel, "OFF");
             }
           });
 
@@ -362,6 +458,7 @@ export const commandsHandler = ({
             // Send presets if just ON command
             
             // Send to Dynalite and update MQTT
+            // Preset frame (172/17) uses a different fade scale than channel-level (113).
             const fade = bridges.area[area].channel[channel].fade * 100;
             const buffer = util.createBufferFletcher16Mod256([172, 4, 17, 220, 0, 38, 0, areaNumber, 255, 0, 0, channelNumber, 0, 1, 0, 0, fade, 0]);
             dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
@@ -370,6 +467,7 @@ export const commandsHandler = ({
             // Send presets if just OFF command
             
             // Send to Dynalite and update MQTT
+            // Preset frame (172/17) uses a different fade scale than channel-level (113).
             const fade = bridges.area[area].channel[channel].fade * 100;
             const buffer = util.createBufferFletcher16Mod256([172, 4, 17, 220, 0, 38, 0, areaNumber, 255, 0, 0, channelNumber, 0, 4, 0, 0, fade, 0]); 
             dynaliteClient.write(Buffer.from(buffer), sendMqttMessage({ state, brightness }));
