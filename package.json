@@ -19,7 +19,7 @@
     "mqtt": "^4.2.6",
     "sqlite3": "^5.1.6",
     "typescript": "^3.8.3",
-    "yaml": "^2.2.2"
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/mqtt": "^2.5.0",
